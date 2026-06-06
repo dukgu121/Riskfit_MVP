@@ -24,7 +24,6 @@ Last updated: 2026-06-06
 
 - Should generated report history be persisted in MVP, or generated on demand only? Current implementation supports writing report runs but the UI still generates on demand.
 - Firebase project values still need to be supplied by the user in `.env.local` and Vercel env vars.
-- Firestore rules are ready but not deployed yet; this PC must run `npx firebase-tools login` first.
 
 ## Done
 
@@ -36,7 +35,8 @@ Last updated: 2026-06-06
 - Installed and documented temporary Cloudflare Tunnel demo scripts.
 - Fixed existing React lint blockers in `InsuranceForm`, `DesktopOnlyGate`, `ReportTab`, `button`, `badge`, and `toast`.
 - Verification passed on 2026-06-06: `npm test`, `npm run lint`, `npm run build`.
-- Added `firebase.json` for Firestore rules deployment. Deploy attempt failed only because Firebase CLI has no authorized account on this PC.
+- Added `firebase.json` for Firestore rules deployment.
+- Firestore API was enabled, the default Firestore database was created, and `firestore.rules` was deployed on 2026-06-06.
 
 ## Handoff Format
 

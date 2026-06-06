@@ -38,11 +38,10 @@ Take over the blocked Claude lane and finish the Firebase MVP runtime/schema wor
 - `npm test` - passed, 4 files / 23 tests
 - `npm run lint` - passed
 - `npm run build` - passed, with Vite large chunk warning only
-- `npx firebase-tools deploy --only firestore:rules --project <env project>` - failed because Firebase CLI has no authorized account on this PC
+- `npx firebase-tools deploy --only firestore:rules --project <env project>` - passed after Firebase CLI login
 
 ## Remaining Risks
 
 - Firebase project env vars still need to be supplied locally and in Vercel.
-- Firestore rules still need deployment after `npx firebase-tools login`.
 - Report run persistence exists in the repository layer, but the current UI still generates reports on demand.
 - Cloudflare Tunnel URL is temporary and must be copied into Vercel env for each demo session.
