@@ -1,0 +1,17 @@
+[
+  {
+    "id": "landing_consent",
+    "required": true,
+    "text": "입력한 건강·재무·보험 정보는 브라우저에 임시 저장되며, Google 로그인 시 Firebase에 저장되어 다시 불러올 수 있습니다. 리포트 생성 시 필요한 정보가 시연용 로컬 서버로 전달될 수 있음을 확인하고 테스트 참여에 동의합니다."
+  },
+  {
+    "id": "result_banner",
+    "required": true,
+    "text": "참고용 결과입니다. 특정 상품 가입을 권하지 않습니다."
+  },
+  {
+    "id": "report_footer",
+    "required": true,
+    "text": "본 결과는 특정 보험상품 추천이 아니라 현재 보장 상태를 이해하기 위한 참고 정보입니다."
+  }
+]

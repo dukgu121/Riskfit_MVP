@@ -1,0 +1,163 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function schemaV1() {
+      return request.resource.data.schemaVersion == 1;
+    }
+
+    function optionalString(field) {
+      return !(field in request.resource.data)
+        || request.resource.data[field] == null
+        || request.resource.data[field] is string;
+    }
+
+    function optionalNumber(field) {
+      return !(field in request.resource.data)
+        || request.resource.data[field] == null
+        || request.resource.data[field] is number;
+    }
+
+    function validUserDoc() {
+      return schemaV1()
+        && request.resource.data.keys().hasOnly([
+          'schemaVersion',
+          'authType',
+          'consent',
+          'createdAt',
+          'updatedAt',
+          'lastActiveAt',
+        ])
+        && request.resource.data.authType == 'google'
+        && request.resource.data.consent is map
+        && request.resource.data.consent.accepted is bool
+        && request.resource.data.consent.version is string;
+    }
+
+    function validProfileDoc() {
+      return schemaV1()
+        && request.resource.data.keys().hasOnly([
+          'schemaVersion',
+          'status',
+          'basic',
+          'health',
+          'familyHistory',
+          'completedSteps',
+          'createdAt',
+          'updatedAt',
+        ])
+        && (!(request.resource.data.keys().hasAny(['status']))
+          || request.resource.data.status in ['draft', 'complete'])
+        && request.resource.data.basic is map
+        && request.resource.data.health is map
+        && request.resource.data.familyHistory is list
+        && (!(request.resource.data.keys().hasAny(['completedSteps']))
+          || request.resource.data.completedSteps is list);
+    }
+
+    function validInsuranceDoc(insuranceId) {
+      return schemaV1()
+        && request.resource.data.keys().hasOnly([
+          'schemaVersion',
+          'id',
+          'company',
+          'productName',
+          'coverageType',
+          'coverageAmount',
+          'amountUnit',
+          'monthlyPremium',
+          'joinedAt',
+          'source',
+          'createdAt',
+          'updatedAt',
+        ])
+        && request.resource.data.id == insuranceId
+        && request.resource.data.coverageType in [
+          'actual_medical',
+          'cancer_diagnosis',
+          'cerebrovascular_diagnosis',
+          'cardiac_diagnosis',
+          'disease_hospitalization',
+          'accident_hospitalization',
+          'surgery',
+          'income_interruption',
+          'death',
+          'liability',
+          'other',
+        ]
+        && request.resource.data.amountUnit in [
+          'presence',
+          'krw',
+          'krw_per_event',
+          'krw_per_day',
+          'krw_per_month',
+        ]
+        && optionalString('company')
+        && optionalString('productName')
+        && optionalNumber('coverageAmount')
+        && optionalNumber('monthlyPremium')
+        && optionalString('joinedAt')
+        && (!(request.resource.data.keys().hasAny(['source']))
+          || request.resource.data.source == 'manual');
+    }
+
+    function validReportDoc() {
+      return schemaV1()
+        && request.resource.data.keys().hasOnly([
+          'schemaVersion',
+          'summary',
+          'report',
+          'createdAt',
+        ])
+        && request.resource.data.summary is map
+        && request.resource.data.report is map;
+    }
+
+    function validChecklistDoc() {
+      return schemaV1()
+        && request.resource.data.keys().hasOnly([
+          'schemaVersion',
+          'checkedIds',
+          'updatedAt',
+        ])
+        && request.resource.data.checkedIds is list;
+    }
+
+    match /users/{uid} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid) && validUserDoc();
+
+      match /profile/{profileId} {
+        allow read, delete: if isOwner(uid) && profileId == 'current';
+        allow create, update: if isOwner(uid)
+          && profileId == 'current'
+          && validProfileDoc();
+      }
+
+      match /insurances/{insuranceId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && validInsuranceDoc(insuranceId);
+      }
+
+      match /reportRuns/{reportId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && validReportDoc();
+      }
+
+      match /checklists/{checklistId} {
+        allow read, delete: if isOwner(uid) && checklistId == 'current';
+        allow create, update: if isOwner(uid)
+          && checklistId == 'current'
+          && validChecklistDoc();
+      }
+    }
+  }
+}

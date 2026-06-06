@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "weights": {
+    "health": 0.35,
+    "lifestyle": 0.25,
+    "job": 0.2,
+    "finance": 0.2
+  },
+  "health": {
+    "bmi": [
+      { "id": "normal", "maxExclusive": 23, "score": 10 },
+      { "id": "overweight", "minInclusive": 23, "maxExclusive": 25, "score": 25 },
+      { "id": "obese", "minInclusive": 25, "score": 40 }
+    ],
+    "checkupIssue": { "none": 0, "present": 15 },
+    "currentDisease": { "none": 0, "present": 20 },
+    "hospitalVisits": { "visits_1_2": 5, "visits_3_5": 10, "visits_6_plus": 15 },
+    "familyHistoryCount": { "0": 0, "1": 10, "2_plus": 20 },
+    "cap": 100
+  },
+  "lifestyle": {
+    "smoking": { "no": 0, "yes": 25 },
+    "drinking": { "rare": 0, "weekly_1_2": 5, "weekly_3_plus": 15 },
+    "exercise": { "weekly_3_plus": 0, "weekly_2": 5, "weekly_1_or_less": 10, "rare": 10 },
+    "sleep": { "hours_7_plus": 0, "hours_6_7": 5, "under_6": 15 },
+    "stress": { "normal": 0, "high": 15 },
+    "overtime": { "rare": 0, "weekly_1_2": 5, "weekly_3_plus": 10 },
+    "cap": 100
+  },
+  "job": {
+    "student": 20,
+    "office": 30,
+    "service": 45,
+    "driving": 60,
+    "field": 70
+  },
+  "finance": {
+    "emergencyFundMonths": [
+      { "minInclusive": 3, "score": 10 },
+      { "minInclusive": 1, "maxExclusive": 3, "score": 30 },
+      { "maxExclusive": 1, "score": 50 }
+    ],
+    "fixedExpenseRatio": [
+      { "maxExclusive": 0.5, "score": 0 },
+      { "minInclusive": 0.5, "maxExclusive": 0.7, "score": 10 },
+      { "minInclusive": 0.7, "score": 20 }
+    ],
+    "hasDependents": { "false": 0, "true": 10 },
+    "premiumIncomeRatio": [
+      { "maxExclusive": 0.05, "score": 0 },
+      { "minInclusive": 0.05, "score": 5 }
+    ],
+    "cap": 100
+  },
+  "bands": {
+    "risk": [
+      { "id": "low", "min": 0, "max": 39, "label": "낮음" },
+      { "id": "medium", "min": 40, "max": 69, "label": "보통" },
+      { "id": "high", "min": 70, "max": 100, "label": "높음" }
+    ],
+    "coverageFit": [
+      { "id": "insufficient", "min": 0, "max": 49, "label": "부족" },
+      { "id": "caution", "min": 50, "max": 79, "label": "주의" },
+      { "id": "sufficient", "min": 80, "max": 150, "label": "충분" },
+      { "id": "excessive", "min": 151, "max": 100000, "label": "과도" }
+    ]
+  },
+  "outOfPocketScenario": {
+    "days": 7,
+    "treatmentCost": 3000000,
+    "actualMedicalPayoutIfPresent": 900000
+  }
+}

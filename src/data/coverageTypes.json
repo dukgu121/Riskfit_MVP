@@ -1,0 +1,101 @@
+[
+  {
+    "id": "actual_medical",
+    "label": "실손의료비",
+    "valueKind": "boolean",
+    "unit": "presence",
+    "aggregation": "any",
+    "includedInFit": true,
+    "description": "병원비 영수증 보장, 가입 여부 기준"
+  },
+  {
+    "id": "cancer_diagnosis",
+    "label": "암 진단비",
+    "valueKind": "money",
+    "unit": "krw_per_event",
+    "aggregation": "sum",
+    "includedInFit": true,
+    "description": "암 진단 시 1회 지급"
+  },
+  {
+    "id": "cerebrovascular_diagnosis",
+    "label": "뇌혈관 진단비",
+    "valueKind": "money",
+    "unit": "krw_per_event",
+    "aggregation": "sum",
+    "includedInFit": true,
+    "description": "뇌출혈·뇌경색 등 뇌혈관질환 진단 시 1회 지급"
+  },
+  {
+    "id": "cardiac_diagnosis",
+    "label": "심장질환 진단비",
+    "valueKind": "money",
+    "unit": "krw_per_event",
+    "aggregation": "sum",
+    "includedInFit": true,
+    "description": "급성심근경색·허혈성심장질환 등 진단 시 1회 지급"
+  },
+  {
+    "id": "disease_hospitalization",
+    "label": "질병 입원비",
+    "valueKind": "money",
+    "unit": "krw_per_day",
+    "aggregation": "sum",
+    "includedInFit": true,
+    "description": "질병 입원 1일당 지급"
+  },
+  {
+    "id": "accident_hospitalization",
+    "label": "상해 입원비",
+    "valueKind": "money",
+    "unit": "krw_per_day",
+    "aggregation": "sum",
+    "includedInFit": true,
+    "description": "상해 입원 1일당 지급"
+  },
+  {
+    "id": "surgery",
+    "label": "수술비",
+    "valueKind": "money",
+    "unit": "krw_per_event",
+    "aggregation": "sum",
+    "includedInFit": true,
+    "description": "수술 1회당 지급"
+  },
+  {
+    "id": "income_interruption",
+    "label": "소득중단 보장",
+    "valueKind": "money",
+    "unit": "krw_per_month",
+    "aggregation": "sum",
+    "includedInFit": true,
+    "description": "입원/수술로 인한 소득 공백 대비"
+  },
+  {
+    "id": "death",
+    "label": "사망보장",
+    "valueKind": "money",
+    "unit": "krw",
+    "aggregation": "sum",
+    "includedInFit": true,
+    "description": "사망 시 지급"
+  },
+  {
+    "id": "liability",
+    "label": "배상책임",
+    "valueKind": "money",
+    "unit": "krw",
+    "aggregation": "sum",
+    "includedInFit": true,
+    "description": "타인 피해 보상 한도"
+  },
+  {
+    "id": "other",
+    "label": "기타",
+    "valueKind": "money",
+    "unit": "krw",
+    "aggregation": "sum",
+    "includedInFit": false,
+    "description": "분류 외 보장"
+  }
+]

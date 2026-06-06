@@ -1,0 +1,254 @@
+[
+  {
+    "userType": "twenties_new_worker",
+    "coverageType": "actual_medical",
+    "required": true,
+    "standardAmount": null,
+    "unit": "presence",
+    "fitMode": "presence",
+    "sourceRef": "기획안 4.4, 5.4.2"
+  },
+  {
+    "userType": "twenties_new_worker",
+    "coverageType": "cancer_diagnosis",
+    "required": true,
+    "standardAmount": 40000000,
+    "unit": "krw_per_event",
+    "fitMode": "ratio",
+    "sourceRef": "기획안 4.4"
+  },
+  {
+    "userType": "twenties_new_worker",
+    "coverageType": "cerebrovascular_diagnosis",
+    "required": true,
+    "standardAmount": 20000000,
+    "unit": "krw_per_event",
+    "fitMode": "ratio",
+    "sourceRef": "보장 확장(2026-05): 뇌혈관 진단비 기본 권장값, 조정 가능"
+  },
+  {
+    "userType": "twenties_new_worker",
+    "coverageType": "cardiac_diagnosis",
+    "required": true,
+    "standardAmount": 20000000,
+    "unit": "krw_per_event",
+    "fitMode": "ratio",
+    "sourceRef": "보장 확장(2026-05): 심장질환 진단비 기본 권장값, 조정 가능"
+  },
+  {
+    "userType": "twenties_new_worker",
+    "coverageType": "disease_hospitalization",
+    "required": true,
+    "standardAmount": 50000,
+    "unit": "krw_per_day",
+    "fitMode": "ratio",
+    "sourceRef": "기획안 4.4"
+  },
+  {
+    "userType": "twenties_new_worker",
+    "coverageType": "accident_hospitalization",
+    "required": true,
+    "standardAmount": 30000,
+    "unit": "krw_per_day",
+    "fitMode": "ratio",
+    "sourceRef": "기획안 5.4.3 예시 및 MVP 골든 케이스 보정"
+  },
+  {
+    "userType": "twenties_new_worker",
+    "coverageType": "surgery",
+    "required": true,
+    "standardAmount": null,
+    "unit": "presence",
+    "fitMode": "presence",
+    "sourceRef": "보장 확장(2026-05): 수술비 보유 여부 기준"
+  },
+  {
+    "userType": "twenties_new_worker",
+    "coverageType": "income_interruption",
+    "required": true,
+    "standardAmount": 1500000,
+    "unit": "krw_per_month",
+    "fitMode": "ratio",
+    "sourceRef": "기획안 5.4.2"
+  },
+  {
+    "userType": "twenties_new_worker",
+    "coverageType": "liability",
+    "required": true,
+    "standardAmount": null,
+    "unit": "presence",
+    "fitMode": "presence",
+    "sourceRef": "보장 확장(2026-05): 배상책임 보유 여부 기준"
+  },
+  {
+    "userType": "thirties_worker",
+    "coverageType": "actual_medical",
+    "required": true,
+    "standardAmount": null,
+    "unit": "presence",
+    "fitMode": "presence",
+    "sourceRef": "기획안 4.4"
+  },
+  {
+    "userType": "thirties_worker",
+    "coverageType": "cancer_diagnosis",
+    "required": true,
+    "standardAmount": 50000000,
+    "unit": "krw_per_event",
+    "fitMode": "ratio",
+    "sourceRef": "기획안 4.4"
+  },
+  {
+    "userType": "thirties_worker",
+    "coverageType": "cerebrovascular_diagnosis",
+    "required": true,
+    "standardAmount": 20000000,
+    "unit": "krw_per_event",
+    "fitMode": "ratio",
+    "sourceRef": "보장 확장(2026-05): 뇌혈관 진단비 기본 권장값, 조정 가능"
+  },
+  {
+    "userType": "thirties_worker",
+    "coverageType": "cardiac_diagnosis",
+    "required": true,
+    "standardAmount": 20000000,
+    "unit": "krw_per_event",
+    "fitMode": "ratio",
+    "sourceRef": "보장 확장(2026-05): 심장질환 진단비 기본 권장값, 조정 가능"
+  },
+  {
+    "userType": "thirties_worker",
+    "coverageType": "disease_hospitalization",
+    "required": true,
+    "standardAmount": 50000,
+    "unit": "krw_per_day",
+    "fitMode": "ratio",
+    "sourceRef": "기획안 4.4"
+  },
+  {
+    "userType": "thirties_worker",
+    "coverageType": "accident_hospitalization",
+    "required": true,
+    "standardAmount": 50000,
+    "unit": "krw_per_day",
+    "fitMode": "ratio",
+    "sourceRef": "기획안 4.4"
+  },
+  {
+    "userType": "thirties_worker",
+    "coverageType": "surgery",
+    "required": true,
+    "standardAmount": null,
+    "unit": "presence",
+    "fitMode": "presence",
+    "sourceRef": "보장 확장(2026-05): 수술비 보유 여부 기준"
+  },
+  {
+    "userType": "thirties_worker",
+    "coverageType": "income_interruption",
+    "required": true,
+    "standardAmount": 2000000,
+    "unit": "krw_per_month",
+    "fitMode": "ratio",
+    "sourceRef": "기획안 4.4"
+  },
+  {
+    "userType": "thirties_worker",
+    "coverageType": "liability",
+    "required": true,
+    "standardAmount": null,
+    "unit": "presence",
+    "fitMode": "presence",
+    "sourceRef": "보장 확장(2026-05): 배상책임 보유 여부 기준"
+  },
+  {
+    "userType": "has_dependents",
+    "coverageType": "actual_medical",
+    "required": true,
+    "standardAmount": null,
+    "unit": "presence",
+    "fitMode": "presence",
+    "sourceRef": "기획안 4.4"
+  },
+  {
+    "userType": "has_dependents",
+    "coverageType": "cancer_diagnosis",
+    "required": true,
+    "standardAmount": 50000000,
+    "unit": "krw_per_event",
+    "fitMode": "ratio",
+    "sourceRef": "기획안 4.4"
+  },
+  {
+    "userType": "has_dependents",
+    "coverageType": "cerebrovascular_diagnosis",
+    "required": true,
+    "standardAmount": 30000000,
+    "unit": "krw_per_event",
+    "fitMode": "ratio",
+    "sourceRef": "보장 확장(2026-05): 뇌혈관 진단비 기본 권장값, 조정 가능"
+  },
+  {
+    "userType": "has_dependents",
+    "coverageType": "cardiac_diagnosis",
+    "required": true,
+    "standardAmount": 30000000,
+    "unit": "krw_per_event",
+    "fitMode": "ratio",
+    "sourceRef": "보장 확장(2026-05): 심장질환 진단비 기본 권장값, 조정 가능"
+  },
+  {
+    "userType": "has_dependents",
+    "coverageType": "disease_hospitalization",
+    "required": true,
+    "standardAmount": 50000,
+    "unit": "krw_per_day",
+    "fitMode": "ratio",
+    "sourceRef": "기획안 4.4"
+  },
+  {
+    "userType": "has_dependents",
+    "coverageType": "accident_hospitalization",
+    "required": true,
+    "standardAmount": 50000,
+    "unit": "krw_per_day",
+    "fitMode": "ratio",
+    "sourceRef": "기획안 4.4"
+  },
+  {
+    "userType": "has_dependents",
+    "coverageType": "surgery",
+    "required": true,
+    "standardAmount": null,
+    "unit": "presence",
+    "fitMode": "presence",
+    "sourceRef": "보장 확장(2026-05): 수술비 보유 여부 기준"
+  },
+  {
+    "userType": "has_dependents",
+    "coverageType": "income_interruption",
+    "required": true,
+    "standardAmount": 2500000,
+    "unit": "krw_per_month",
+    "fitMode": "ratio",
+    "sourceRef": "기획안 4.4"
+  },
+  {
+    "userType": "has_dependents",
+    "coverageType": "death",
+    "required": true,
+    "standardAmount": 100000000,
+    "unit": "krw",
+    "fitMode": "ratio",
+    "sourceRef": "보장 확장(2026-05): 부양가족 사망보장 기본 권장값, 조정 가능"
+  },
+  {
+    "userType": "has_dependents",
+    "coverageType": "liability",
+    "required": true,
+    "standardAmount": null,
+    "unit": "presence",
+    "fitMode": "presence",
+    "sourceRef": "보장 확장(2026-05): 배상책임 보유 여부 기준"
+  }
+]
