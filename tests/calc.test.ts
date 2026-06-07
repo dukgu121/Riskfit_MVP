@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { calculateCompleteness } from '../src/lib/completeness'
+import coverageTypesData from '../src/data/coverageTypes.json'
+import standardCoveragesData from '../src/data/standardCoverages.json'
+import { COVERAGE_SCORING_ORDER } from '../src/lib/calc/coverageFit'
 import {
   calculateBmi,
   coverageFit,
   financialRisk,
+  hasCoverage,
   healthRisk,
   lifestyleRisk,
   outOfPocket,
@@ -12,7 +16,13 @@ import {
   selectUserType,
   totalRiskScore,
 } from '../src/lib/calc'
-import type { Insurance } from '../src/types'
+import type {
+  CoverageType,
+  Insurance,
+  StandardCoverage,
+  UserProfile,
+  UserTypeId,
+} from '../src/types'
 import { kimMinjiInsurances, kimMinjiProfile } from './fixtures'
 
 describe('RiskFit calculation core', () => {
@@ -78,6 +88,27 @@ describe('RiskFit calculation core', () => {
       }),
     ).toBe(100)
     expect(lifestyleRisk(kimMinjiProfile)).toBe(40)
+  })
+
+  it('keeps known family history when sentinel values are mixed in', () => {
+    expect(
+      healthRisk({
+        ...kimMinjiProfile,
+        checkupIssue: false,
+        currentDisease: false,
+        hospitalVisits: 'visits_1_2',
+        familyHistory: ['none', 'cancer'] as UserProfile['familyHistory'],
+      }),
+    ).toBe(25)
+    expect(
+      healthRisk({
+        ...kimMinjiProfile,
+        checkupIssue: false,
+        currentDisease: false,
+        hospitalVisits: 'visits_1_2',
+        familyHistory: ['unknown', 'diabetes'] as UserProfile['familyHistory'],
+      }),
+    ).toBe(25)
   })
 
   it('scores financial boundary conditions', () => {
@@ -150,6 +181,37 @@ describe('RiskFit calculation core', () => {
     // 수술비 is now scored (presence type, required for all user types); a held
     // surgery row reads as covered → fit 100.
     expect(fit.items.find((item) => item.type === 'surgery')?.fit).toBe(100)
+  })
+
+  it('treats malformed presence coverage amounts as absent', () => {
+    const insurances: Insurance[] = [
+      {
+        id: 'actual-negative',
+        coverageType: 'actual_medical',
+        coverageAmount: -1,
+        amountUnit: 'presence',
+      },
+      {
+        id: 'actual-nan',
+        coverageType: 'actual_medical',
+        coverageAmount: Number.NaN,
+        amountUnit: 'presence',
+      },
+    ]
+
+    const fit = coverageFit(insurances, kimMinjiProfile)
+    const actualMedical = fit.items.find(
+      (item) => item.type === 'actual_medical',
+    )
+    const oop = outOfPocket(kimMinjiProfile, insurances)
+
+    expect(hasCoverage(insurances, 'actual_medical')).toBe(false)
+    expect(actualMedical).toMatchObject({
+      current: false,
+      fit: 0,
+      band: 'insufficient',
+    })
+    expect(oop.actualMedicalPayout).toBe(0)
   })
 
   it('labels coverage fit boundaries', () => {
@@ -235,5 +297,45 @@ describe('RiskFit calculation core', () => {
     expect(minimal.missingFields).not.toContain('부양가족 여부')
     expect(minimal.missingFields).not.toContain('건강검진 이상 여부')
     expect(minimal.imputedFields.length).toBeGreaterThan(0)
+  })
+
+  it('keeps coverage standard data aligned with scoring rules', () => {
+    const coverageTypes = coverageTypesData as CoverageType[]
+    const standardCoverages = standardCoveragesData as StandardCoverage[]
+    const coverageTypeIds = new Set(coverageTypes.map((item) => item.id))
+    const userTypes: UserTypeId[] = [
+      'twenties_new_worker',
+      'thirties_worker',
+      'has_dependents',
+    ]
+    const seen = new Set<string>()
+
+    for (const standard of standardCoverages) {
+      const key = `${standard.userType}/${standard.coverageType}`
+      expect(seen.has(key)).toBe(false)
+      seen.add(key)
+      expect(coverageTypeIds.has(standard.coverageType)).toBe(true)
+      expect(userTypes).toContain(standard.userType)
+
+      if (standard.required) {
+        expect(COVERAGE_SCORING_ORDER).toContain(standard.coverageType)
+      }
+
+      if (standard.fitMode === 'presence') {
+        expect(standard.standardAmount).toBeNull()
+        expect(standard.unit).toBe('presence')
+      } else {
+        expect(standard.standardAmount).toEqual(expect.any(Number))
+        expect(standard.standardAmount).toBeGreaterThan(0)
+        expect(standard.unit).not.toBe('presence')
+      }
+    }
+
+    for (const userType of userTypes) {
+      const requiredCount = standardCoverages.filter(
+        (item) => item.userType === userType && item.required,
+      ).length
+      expect(requiredCount).toBe(userType === 'has_dependents' ? 10 : 9)
+    }
   })
 })

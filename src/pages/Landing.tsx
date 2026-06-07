@@ -132,7 +132,7 @@ function ConsentCard({ consent, onConsentChange }: ConsentCardProps) {
           className="mt-1"
         />
         <span className="text-sm leading-relaxed text-neutral-700">
-          로그인하면 입력 정보가 Firebase에 저장되어 다시 불러올 수 있어요.
+          내 보험·건강 정보를 분석해 맞춤 보장 진단을 받는 데 동의해요.
         </span>
       </label>
     </section>

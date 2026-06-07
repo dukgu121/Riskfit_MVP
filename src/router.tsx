@@ -5,10 +5,9 @@
  *   - A single top-level `<AppLayout/>` route hosts the desktop-only gate,
  *     page-transition animations and the always-visible footer.
  *   - Page components are loaded via React Router 7's `lazy` field so the
- *     initial bundle stays lean (the landing page is the only thing the
- *     user always hits — the rest is gated by consent anyway).
- *   - Every non-landing route is wrapped at element level by `<ConsentGate>`
- *     so a deep-linked user without `riskfit.consent` is bounced back to "/".
+ *     initial bundle stays lean.
+ *   - `/login` is the only public route. `/` requires auth, and all wizard /
+ *     result routes require auth plus the landing-page consent flag.
  *   - Unknown paths fall through a `*` route to the same `<NotFound/>` UI.
  *
  * Note on lazy + named exports
@@ -22,6 +21,7 @@ import { createBrowserRouter } from "react-router-dom";
 import type { RouteObject } from "react-router-dom";
 
 import { AppLayout } from "./components/layout/AppLayout";
+import { AuthGate } from "./components/layout/AuthGate";
 import { ConsentGate } from "./components/layout/ConsentGate";
 import { NotFound } from "./pages/NotFound";
 
@@ -45,7 +45,31 @@ function lazyNamed<K extends string>(
   };
 }
 
-/** Wrap a `lazy` factory in `<ConsentGate>` while preserving code-splitting. */
+/** Wrap a `lazy` factory in `<AuthGate>` (login required, no consent yet). */
+function authedLazy<K extends string>(
+  loader: () => Promise<LazyPageModule<K>>,
+  exportName: K,
+) {
+  return async () => {
+    const mod = await loader();
+    const Page: AnyPage = mod[exportName];
+    const Wrapped: AnyPage = function AuthedPage() {
+      return (
+        <AuthGate>
+          <Page />
+        </AuthGate>
+      );
+    };
+    Wrapped.displayName = `Authed(${exportName})`;
+    return { Component: Wrapped };
+  };
+}
+
+/**
+ * Wrap a `lazy` factory in `<AuthGate>` + `<ConsentGate>` while preserving
+ * code-splitting. Login is required first; consent is the second gate. A
+ * logged-out user bounces to `/login`, a logged-in-but-unconsented user to "/".
+ */
 function gatedLazy<K extends string>(
   loader: () => Promise<LazyPageModule<K>>,
   exportName: K,
@@ -57,9 +81,11 @@ function gatedLazy<K extends string>(
     const Page: AnyPage = mod[exportName];
     const Wrapped: AnyPage = function GatedPage() {
       return (
-        <ConsentGate>
-          <Page />
-        </ConsentGate>
+        <AuthGate>
+          <ConsentGate>
+            <Page />
+          </ConsentGate>
+        </AuthGate>
       );
     };
     Wrapped.displayName = `Gated(${exportName})`;
@@ -72,8 +98,14 @@ const routes: RouteObject[] = [
     element: <AppLayout />,
     children: [
       {
+        // 시작 화면 — Google 로그인. 유일하게 인증 게이트가 없는 라우트.
+        path: "/login",
+        lazy: lazyNamed(() => import("./pages/Login"), "Login"),
+      },
+      {
+        // 랜딩(동의 화면). 로그인 후에만 도달 가능.
         path: "/",
-        lazy: lazyNamed(() => import("./pages/Landing"), "Landing"),
+        lazy: authedLazy(() => import("./pages/Landing"), "Landing"),
       },
       {
         path: "/input/basic",
@@ -111,7 +143,11 @@ const routes: RouteObject[] = [
       {
         // 404 — keep inside AppLayout so the look stays consistent.
         path: "*",
-        element: <NotFound />,
+        element: (
+          <AuthGate>
+            <NotFound />
+          </AuthGate>
+        ),
       },
     ],
   },

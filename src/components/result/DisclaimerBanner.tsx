@@ -8,15 +8,13 @@
 
 import { Info } from "lucide-react";
 
-import disclaimers from "../../data/disclaimers.json";
 import { cn } from "../../lib/cn";
+import { getDisclaimerText } from "../../lib/disclaimers";
 
 const RESULT_BANNER_FALLBACK =
   "참고용 결과입니다. 특정 상품 가입을 권하지 않아요.";
 
-const bannerText =
-  disclaimers.find((item) => item.id === "result_banner")?.text ??
-  RESULT_BANNER_FALLBACK;
+const bannerText = getDisclaimerText("result_banner", RESULT_BANNER_FALLBACK);
 
 export interface DisclaimerBannerProps {
   className?: string;

@@ -13,6 +13,29 @@ describe('report generation', () => {
     expect(report.endsWith(REPORT_DISCLAIMER)).toBe(true)
   })
 
+  it('uses natural Korean particles for caution and excessive coverage text', () => {
+    const summary = buildKimMinjiSummary()
+    const report = buildTemplateReport({
+      ...summary,
+      coverageFit: {
+        ...summary.coverageFit,
+        items: summary.coverageFit.items.slice(0, 1),
+        overall: 75,
+        weakCoverages: [],
+        cautionCoverages: ['암 진단비'],
+        excessiveCoverages: ['수술비'],
+      },
+      weakCoverages: [],
+      cautionCoverages: ['암 진단비'],
+      expectedOutOfPocket: 0,
+    })
+
+    expect(report).toContain('항목은 암 진단비예요.')
+    expect(report).toContain('수술비는 표준보다')
+    expect(report).not.toContain('암 진단비이에요')
+    expect(report).not.toContain('수술비은')
+  })
+
   it('returns codex text when the sidecar succeeds', async () => {
     const fetchImpl = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ source: 'codex', text: 'AI 리포트입니다.' }), {
@@ -67,6 +90,26 @@ describe('report generation', () => {
         timeoutMs: 100,
       }),
     ).resolves.toMatchObject({ source: 'template', errorReason: 'http_500' })
+  })
+
+  it('falls back to the template when sanitized codex text is empty', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ source: 'codex', text: '안녕하세요! 함께해요 ㅎㅎ 😊' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    await expect(
+      generateReport(buildKimMinjiSummary(), {
+        sidecarUrl: 'https://riskfit.example.test',
+        fetchImpl,
+        timeoutMs: 100,
+      }),
+    ).resolves.toMatchObject({
+      source: 'template',
+      errorReason: 'empty_response',
+    })
   })
 
   it('sanitizes greetings, emojis, and kaomoji from LLM output', () => {

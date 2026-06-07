@@ -101,11 +101,11 @@ export function hasCoverage(
   // A row exists for this type, but the user may have explicitly recorded
   // "없음" (stored as coverageAmount null) or a zero amount. Those must NOT
   // count as coverage — otherwise declining 실손 would still read as 충분.
+  // Treat malformed negative / non-finite amounts as absent as well.
   return insurances.some(
     (item) =>
       item.coverageType === coverageType &&
-      item.coverageAmount != null &&
-      item.coverageAmount !== 0,
+      nonNegativeNumber(item.coverageAmount) > 0,
   )
 }
 

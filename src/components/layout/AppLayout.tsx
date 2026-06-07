@@ -6,7 +6,7 @@
  *   2. Render the active route inside `<AnimatePresence mode="wait">` so
  *      page enter/exit animations are coordinated per pathname.
  *   3. Provide a minimal, Toss-style footer disclaimer on every route *except*
- *      the landing page, which renders its own bespoke footer.
+ *      the login and landing pages, which render their own bespoke footers.
  *
  * The layout itself does not impose any horizontal max-width — individual
  * pages own their own container so they can pick how wide / narrow they
@@ -21,7 +21,9 @@ import { PageTransition } from "./PageTransition";
 
 export function AppLayout() {
   const location = useLocation();
-  const isLanding = location.pathname === "/";
+  // 랜딩("/")과 로그인("/login")은 각자의 전용 푸터를 렌더링한다.
+  const hasBespokeFooter =
+    location.pathname === "/" || location.pathname === "/login";
 
   return (
     <DesktopOnlyGate>
@@ -34,7 +36,7 @@ export function AppLayout() {
           </AnimatePresence>
         </main>
 
-        {!isLanding && (
+        {!hasBespokeFooter && (
           <footer className="shrink-0 border-t border-neutral-200 bg-white">
             <div className="mx-auto max-w-[480px] px-5 py-4 text-xs text-neutral-500 leading-relaxed">
               이 결과는 참고만 해주세요. 로그인하면 입력 정보는 Firebase에

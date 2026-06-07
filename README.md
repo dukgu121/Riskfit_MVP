@@ -21,6 +21,16 @@ npm run lint
 npm run build
 ```
 
+## Repository Layout
+
+- `src/pages`: route-level screens
+- `src/components`: reusable UI grouped by domain (`layout`, `result`, `wizard`, `ui`)
+- `src/lib`: calculation, Firebase, storage, and report helpers
+- `src/data`: deterministic scoring and coverage reference data
+- `tests`: Vitest regression tests
+- `tools`: local demo sidecar and demo scripts
+- `docs`: public setup notes only
+
 ## Firebase
 
 Create `.env.local` locally and set the same `VITE_FIREBASE_*` values in Vercel:
@@ -51,12 +61,12 @@ The sidecar exposes:
 - `GET /api/health`
 - `POST /api/report`
 
-For a Vercel frontend calling a tunnel URL, start the sidecar with strict origin and token settings:
+For a Vercel frontend calling a tunnel URL, start the sidecar with strict origin and token settings in PowerShell:
 
-```bash
-set SIDECAR_TOKEN=replace-with-demo-secret
-set ALLOWED_ORIGINS=https://your-riskfit-app.vercel.app
-set RISKFIT_TUNNEL_MODE=1
+```powershell
+$env:SIDECAR_TOKEN="replace-with-demo-secret"
+$env:ALLOWED_ORIGINS="https://your-riskfit-app.vercel.app"
+$env:RISKFIT_TUNNEL_MODE="1"
 npm run codex
 ```
 
@@ -75,10 +85,10 @@ See `docs/DEMO_TUNNEL.md` for the PowerShell demo scripts.
 
 ## Golden Case
 
-The calculation test fixture follows the MVP plan's Kim Minji case:
+The calculation test fixture is synthetic data inspired by the MVP plan's sample Kim Minji case. It is not real user data.
 
 - total risk score: `36`
-- coverage fit: `55%`
+- coverage fit: `31%`
 - expected out-of-pocket: raw `2,683,333`, display `약 270만 원`
 
-The 20s accident hospitalization standard is set to `30,000/day` to preserve the MVP golden case, with the source note recorded in `src/data/standardCoverages.json`.
+The original MVP plan used a narrower 5-item coverage set and showed `55%`. The current implementation scores the expanded 9-item required coverage set, so the demo golden case is `31%`. The 20s accident hospitalization standard is set to `30,000/day`, with the source note recorded in `src/data/standardCoverages.json`.

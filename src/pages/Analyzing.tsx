@@ -30,6 +30,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
 
 import { cn } from "../lib/cn";
+import { calculateCompleteness } from "../lib/completeness";
 import { durations, easeOutQuart } from "../lib/motion";
 import { readProfile } from "../lib/storage";
 import type { UserProfileInput } from "../types";
@@ -76,7 +77,7 @@ function usePrefersReducedMotion(): boolean {
  * (vs. deep-linking to `/analyzing` with a fresh session).
  */
 function hasUsableProfile(profile: UserProfileInput): boolean {
-  return Object.keys(profile).length > 0;
+  return calculateCompleteness(profile, []).completed > 0;
 }
 
 export function Analyzing() {

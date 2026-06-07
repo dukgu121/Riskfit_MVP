@@ -11,7 +11,7 @@
  * silently dropped. Errors are surfaced via `console.warn` in dev only.
  *
  * @example
- *   import { read, write, remove } from "@/lib/storage";
+ *   import { read, write, remove } from "../lib/storage";
  *
  *   const profile = read<UserProfileInput>("riskfit.profile", {});
  *   write("riskfit.consent", true);
@@ -67,11 +67,11 @@ export function write<T>(key: string, value: T): void {
 }
 
 /** Remove a key from localStorage. No-op if the key or storage is missing. */
-export function remove(key: string): void {
+export function remove(key: string, { emit = true }: { emit?: boolean } = {}): void {
   if (!hasStorage()) return;
   try {
     window.localStorage.removeItem(key);
-    emitStorageChange(key, "remove");
+    if (emit) emitStorageChange(key, "remove");
   } catch (err) {
     if (import.meta.env.DEV) {
       console.warn(`[storage] failed to remove "${key}":`, err);
@@ -117,6 +117,21 @@ export const STORAGE_KEYS = {
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];
+
+/**
+ * Wipe every RiskFit-owned localStorage key.
+ *
+ * The local cache is shared per *browser*, not per Firebase uid. With the
+ * login-first flow this would otherwise let one Google account see another's
+ * (or stale dev) cached wizard input. We call this on sign-out and when a
+ * different account signs in, so each session starts from that account's
+ * cloud state. Safe to call when storage is unavailable.
+ */
+export function clearLocalState({ emit = true }: { emit?: boolean } = {}): void {
+  for (const key of Object.values(STORAGE_KEYS)) {
+    remove(key, { emit });
+  }
+}
 
 /**
  * Coerce a stored value to a finite number, or `undefined` if it isn't a

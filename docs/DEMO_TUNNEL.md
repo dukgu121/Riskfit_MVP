@@ -47,6 +47,10 @@ VITE_LLM_SIDECAR_TOKEN=replace-with-demo-token
 
 The token must match `SIDECAR_TOKEN` from Terminal 1.
 
+These browser environment values are for a controlled demo only. Rotate or
+discard the token after the demo, and do not treat `VITE_LLM_SIDECAR_TOKEN` as
+production-secret storage.
+
 ## Verification
 
 After redeploying Vercel, open the app from the presentation PC and generate a

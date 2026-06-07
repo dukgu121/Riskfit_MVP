@@ -28,13 +28,14 @@ export function ConsentGate({
 }: ConsentGateProps) {
   const { consent } = useConsent();
   const location = useLocation();
+  const from = `${location.pathname}${location.search}${location.hash}`;
 
   if (!consent) {
     return (
       <Navigate
         to={redirectTo}
         replace
-        state={{ from: location.pathname }}
+        state={{ from }}
       />
     );
   }

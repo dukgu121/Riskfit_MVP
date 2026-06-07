@@ -63,8 +63,17 @@ export function positiveNumber(value: unknown, fallback: number): number {
 function normalizeFamilyHistory(
   values: UserProfile['familyHistory'],
 ): UserProfile['familyHistory'] {
-  if (values.includes('none') || values.includes('unknown')) {
-    return [values.includes('unknown') ? 'unknown' : 'none']
+  const knownConditions = values.filter(
+    (item) => item !== 'none' && item !== 'unknown',
+  )
+  if (knownConditions.length > 0) {
+    return knownConditions
+  }
+  if (values.includes('unknown')) {
+    return ['unknown']
+  }
+  if (values.includes('none')) {
+    return ['none']
   }
   return values
 }

@@ -1,7 +1,13 @@
 import { useEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
 
 import type { Insurance } from "../../types";
-import { STORAGE_KEYS, read, readInsurances, write } from "../storage";
+import {
+  STORAGE_KEYS,
+  clearLocalState,
+  read,
+  readInsurances,
+  write,
+} from "../storage";
 import { useAuth } from "./authContext";
 import {
   loadChecklist,
@@ -70,6 +76,12 @@ export function RiskfitCloudSync({ children }: { children: ReactNode }) {
 
         if (cancelled) return;
 
+        // 로그인 우선 흐름에서는 이 계정의 클라우드 데이터가 단일 진실이다.
+        // 다른 계정/세션에서 남은 로컬 캐시를 먼저 비우고(브라우저 공유 캐시라
+        // 계정 간 누수·이전 테스트값 잔존 방지) 그 위에 클라우드 값만 얹는다.
+        // pausedRef=true 구간이라 이 비우기/쓰기는 클라우드로 역동기화되지 않는다.
+        clearLocalState();
+
         if (remoteConsent === true) {
           write(STORAGE_KEYS.consent, true);
         }
@@ -86,20 +98,6 @@ export function RiskfitCloudSync({ children }: { children: ReactNode }) {
         }
         if (remoteChecklist) {
           write(STORAGE_KEYS.checklist, remoteChecklist);
-        }
-
-        const localState = readLocalState();
-        if (localState.consent) {
-          await saveUserConsent(user.uid, true, "google");
-          if (!remoteProfile && hasProfileData(localState.profile)) {
-            await saveProfile(user.uid, localState.profile);
-          }
-          if (remoteInsurances.length === 0 && localState.insurances.length > 0) {
-            await saveInsurances(user.uid, localState.insurances);
-          }
-          if (!remoteChecklist && hasChecklistData(localState.checklist)) {
-            await saveChecklist(user.uid, localState.checklist);
-          }
         }
 
         hydratedUidRef.current = user.uid;
@@ -166,9 +164,8 @@ export function RiskfitCloudSync({ children }: { children: ReactNode }) {
 
 async function syncLocalToCloud(uid: string): Promise<void> {
   const state = readLocalState();
+  await saveUserConsent(uid, state.consent, "google");
   if (!state.consent) return;
-
-  await saveUserConsent(uid, true, "google");
 
   await Promise.all([
     hasProfileData(state.profile)
@@ -206,10 +203,6 @@ function hasProfileData(profile: LocalProfileSlices): boolean {
     Object.keys(profile.health).length > 0 ||
     family.length > 0
   );
-}
-
-function hasChecklistData(checklist: Record<string, boolean>): boolean {
-  return Object.keys(checklist).length > 0;
 }
 
 function subscribeToHydration(listener: () => void): () => void {

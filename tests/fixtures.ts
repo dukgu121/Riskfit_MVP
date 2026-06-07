@@ -4,6 +4,8 @@ import { coverageFit } from '../src/lib/calc/coverageFit'
 import { outOfPocket } from '../src/lib/calc/outOfPocket'
 import { totalRiskScore } from '../src/lib/calc/totalRiskScore'
 
+// Synthetic golden-case fixture for deterministic regression tests.
+// This is not real user data.
 export const kimMinjiProfile: UserProfile = {
   name: '김민지',
   age: 27,

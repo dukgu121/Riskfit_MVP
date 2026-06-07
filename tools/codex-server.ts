@@ -9,6 +9,13 @@ import express, {
 import { reportSummarySchema, type ReportSummarySchema } from '../src/lib/report/schema.ts'
 import { REPORT_DISCLAIMER } from '../src/lib/report/template.ts'
 
+const DEFAULT_ALLOWED_ORIGINS =
+  'http://localhost:38215,http://127.0.0.1:38215'
+const DEFAULT_PORT = 47821
+const DEFAULT_CODEX_TIMEOUT_MS = 30_000
+const DEFAULT_MAX_OUTPUT_BYTES = 256_000
+const MAX_REPORT_TEXT_CHARS = 3000
+
 type SidecarConfig = {
   port: number
   host: string
@@ -34,22 +41,47 @@ type CodexRunResult = {
 }
 
 export function readConfig(env: NodeJS.ProcessEnv = process.env): SidecarConfig {
-  const allowedOrigins = splitCsv(
-    env.ALLOWED_ORIGINS ??
-      env.RISKFIT_ALLOWED_ORIGINS ??
-      'http://localhost:38215,http://127.0.0.1:38215',
+  const explicitAllowedOrigins = readEnv(
+    env,
+    'ALLOWED_ORIGINS',
+    'RISKFIT_ALLOWED_ORIGINS',
   )
+  const tunnelMode = readEnv(env, 'RISKFIT_TUNNEL_MODE') === '1'
+  if (tunnelMode && !explicitAllowedOrigins) {
+    throw new Error('Tunnel mode requires ALLOWED_ORIGINS')
+  }
+
   const config: SidecarConfig = {
-    port: Number(env.PORT ?? env.RISKFIT_SIDECAR_PORT ?? 47821),
-    host: env.HOST ?? env.RISKFIT_SIDECAR_HOST ?? '127.0.0.1',
-    allowedOrigins,
-    token: env.SIDECAR_TOKEN ?? env.RISKFIT_SIDECAR_TOKEN,
-    tokenHash: env.RISKFIT_API_TOKEN_HASH,
-    tunnelMode: env.RISKFIT_TUNNEL_MODE === '1',
-    codexCommand: env.CODEX_COMMAND ?? 'codex',
-    codexTimeoutMs: Number(env.CODEX_TIMEOUT_MS ?? 30_000),
-    maxOutputBytes: Number(env.CODEX_MAX_OUTPUT_BYTES ?? 256_000),
-    forceTemplate: env.DEMO_FORCE_TEMPLATE === '1',
+    port: readIntegerEnv(
+      readEnv(env, 'PORT', 'RISKFIT_SIDECAR_PORT'),
+      DEFAULT_PORT,
+      'PORT/RISKFIT_SIDECAR_PORT',
+      1,
+      65_535,
+    ),
+    host: readEnv(env, 'HOST', 'RISKFIT_SIDECAR_HOST') ?? '127.0.0.1',
+    allowedOrigins: parseAllowedOrigins(
+      explicitAllowedOrigins ?? DEFAULT_ALLOWED_ORIGINS,
+    ),
+    token: readEnv(env, 'SIDECAR_TOKEN', 'RISKFIT_SIDECAR_TOKEN'),
+    tokenHash: normalizeTokenHash(readEnv(env, 'RISKFIT_API_TOKEN_HASH')),
+    tunnelMode,
+    codexCommand: readEnv(env, 'CODEX_COMMAND') ?? 'codex',
+    codexTimeoutMs: readIntegerEnv(
+      readEnv(env, 'CODEX_TIMEOUT_MS'),
+      DEFAULT_CODEX_TIMEOUT_MS,
+      'CODEX_TIMEOUT_MS',
+      1,
+      Number.MAX_SAFE_INTEGER,
+    ),
+    maxOutputBytes: readIntegerEnv(
+      readEnv(env, 'CODEX_MAX_OUTPUT_BYTES'),
+      DEFAULT_MAX_OUTPUT_BYTES,
+      'CODEX_MAX_OUTPUT_BYTES',
+      1,
+      Number.MAX_SAFE_INTEGER,
+    ),
+    forceTemplate: readEnv(env, 'DEMO_FORCE_TEMPLATE') === '1',
   }
 
   if (config.tunnelMode && !config.token && !config.tokenHash) {
@@ -81,8 +113,8 @@ export function createApp(config: SidecarConfig = readConfig()) {
 
   app.post(
     '/api/report',
-    requireJson,
     requireAuth(config),
+    requireJson,
     express.json({ limit: '32kb', strict: true }),
     async (req, res) => {
       if (config.forceTemplate) {
@@ -204,7 +236,7 @@ export function buildPrompt(summary: ReportSummarySchema): string {
     '4. STRUCTURE — 3~5개 짧은 문단, 문단 사이 빈 줄로 구분:',
     '   - 1문단: 위험 점수와 등급을 한 문장으로. 예) "전체 리스크 점수는 36점으로 낮음 수준이에요."',
     '   - 2문단: 위험 요인 중 가장 강한 1~2개 신호. 예) "생활 습관이 40점으로 가장 높아요."',
-    '   - 3문단: 보장 적합도 요약. 예) "보장 적합도는 55%이고, 2개 항목이 표준 대비 부족해요."',
+    '   - 3문단: 보장 적합도 요약. 입력 JSON의 coverageFit.overall, weakCoverages, cautionCoverages만 사용.',
     '   - 4문단(선택): 예상 자기부담액 한 문장.',
     `   - 마지막 줄(필수, 토씨 하나 바꾸지 말 것): "${REPORT_DISCLAIMER}"`,
     '5. WHAT TO AVOID:',
@@ -212,7 +244,7 @@ export function buildPrompt(summary: ReportSummarySchema): string {
     '   - 입력 데이터에 없는 정량적 주장 금지.',
     '   - 특정 보험사명·상품명 언급 금지.',
     '   - 가입·해지 권유 금지.',
-    '6. NUMBERS: 숫자는 아라비아 숫자로. "36점", "55%", "270만 원" 형태.',
+    '6. NUMBERS: 숫자는 아라비아 숫자로. "36점", "31%", "270만 원" 형태.',
     '7. LENGTH: 한국어 200~350자 내외. 간결할수록 좋다.',
     '',
     'Output ONLY the report text. No preface, no postface, no explanation, no JSON wrapper.',
@@ -242,12 +274,13 @@ export function extractText(stdout: string): string {
   return candidates.at(-1)?.trim() ?? ''
 }
 
-function normalizeReportText(text: string): string {
+export function normalizeReportText(text: string): string {
   const trimmed = text.trim()
   if (!trimmed) return ''
-  const clipped = trimmed.length > 3000 ? trimmed.slice(0, 3000).trim() : trimmed
-  if (clipped.endsWith(REPORT_DISCLAIMER)) return clipped
-  return `${clipped} ${REPORT_DISCLAIMER}`
+  const body = trimmed.includes(REPORT_DISCLAIMER)
+    ? trimmed.split(REPORT_DISCLAIMER).join('').trim()
+    : trimmed
+  return appendReportDisclaimer(body)
 }
 
 function findTextCandidate(value: unknown): string | undefined {
@@ -308,7 +341,7 @@ function requireAuth(config: SidecarConfig) {
     if (!config.token && !config.tokenHash) return next()
 
     const auth = req.header('Authorization') ?? ''
-    const token = auth.startsWith('Bearer ') ? auth.slice('Bearer '.length) : ''
+    const token = auth.match(/^Bearer\s+(.+)$/i)?.[1]?.trim() ?? ''
     if (!token || !isValidToken(token, config)) {
       return res.status(401).json({ error: 'unauthorized', fallback: true })
     }
@@ -341,7 +374,88 @@ function splitCsv(value: string): string[] {
 function appendWithCap(current: string, chunk: Buffer, maxBytes: number): string {
   const next = current + chunk.toString('utf8')
   if (Buffer.byteLength(next, 'utf8') <= maxBytes) return next
-  return next.slice(0, maxBytes)
+  return truncateUtf8(next, maxBytes)
+}
+
+function appendReportDisclaimer(body: string): string {
+  const separator = body ? '\n\n' : ''
+  const bodyLimit = Math.max(
+    0,
+    MAX_REPORT_TEXT_CHARS - separator.length - REPORT_DISCLAIMER.length,
+  )
+  const clippedBody =
+    body.length > bodyLimit ? body.slice(0, bodyLimit).trim() : body
+
+  return clippedBody
+    ? `${clippedBody}${separator}${REPORT_DISCLAIMER}`
+    : REPORT_DISCLAIMER
+}
+
+function readEnv(
+  env: NodeJS.ProcessEnv,
+  ...names: string[]
+): string | undefined {
+  for (const name of names) {
+    const value = env[name]?.trim()
+    if (value) return value
+  }
+  return undefined
+}
+
+function readIntegerEnv(
+  value: string | undefined,
+  fallback: number,
+  label: string,
+  min: number,
+  max: number,
+): number {
+  if (!value) return fallback
+  const parsed = Number(value)
+  if (!Number.isInteger(parsed) || parsed < min || parsed > max) {
+    throw new Error(`${label} must be an integer between ${min} and ${max}`)
+  }
+  return parsed
+}
+
+function parseAllowedOrigins(value: string): string[] {
+  const origins = splitCsv(value).map(normalizeOrigin)
+  if (origins.length === 0) {
+    throw new Error('ALLOWED_ORIGINS must include at least one origin')
+  }
+  return [...new Set(origins)]
+}
+
+function normalizeOrigin(value: string): string {
+  try {
+    const url = new URL(value)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      throw new Error('unsupported protocol')
+    }
+    return url.origin
+  } catch {
+    throw new Error(`Invalid allowed origin: ${value}`)
+  }
+}
+
+function normalizeTokenHash(value: string | undefined): string | undefined {
+  if (!value) return undefined
+  const normalized = value.toLowerCase()
+  if (!/^[a-f0-9]{64}$/.test(normalized)) {
+    throw new Error('RISKFIT_API_TOKEN_HASH must be a SHA-256 hex digest')
+  }
+  return normalized
+}
+
+function truncateUtf8(value: string, maxBytes: number): string {
+  let bytes = 0
+  let end = 0
+  for (const char of value) {
+    const size = Buffer.byteLength(char, 'utf8')
+    if (bytes + size > maxBytes) break
+    bytes += size
+    end += char.length
+  }
+  return value.slice(0, end)
 }
 
 function logRequest(

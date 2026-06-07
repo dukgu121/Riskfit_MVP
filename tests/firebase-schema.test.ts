@@ -1,6 +1,9 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import {
+  firebaseInsuranceDocSchema,
+  firebaseReportDocSchema,
   FIREBASE_SCHEMA_VERSION,
   checklistDocPath,
   checklistToFirebaseDoc,
@@ -82,6 +85,29 @@ describe("Firebase schema contract", () => {
     expect(firebaseDocToInsurance(firebaseDoc)).toEqual(kimMinjiInsurances[0]);
   });
 
+  it("rejects Firestore-unsafe insurance ids and negative money values", () => {
+    const firebaseDoc = insuranceToFirebaseDoc(kimMinjiInsurances[0]);
+
+    expect(() =>
+      firebaseInsuranceDocSchema.parse({
+        ...firebaseDoc,
+        id: "bad/id",
+      }),
+    ).toThrow();
+    expect(() =>
+      firebaseInsuranceDocSchema.parse({
+        ...firebaseDoc,
+        coverageAmount: -1,
+      }),
+    ).toThrow();
+    expect(() =>
+      firebaseInsuranceDocSchema.parse({
+        ...firebaseDoc,
+        monthlyPremium: -1,
+      }),
+    ).toThrow();
+  });
+
   it("validates report and checklist document shapes", () => {
     const reportDoc = reportToFirebaseDoc(buildKimMinjiSummary(), {
       source: "template",
@@ -98,6 +124,26 @@ describe("Firebase schema contract", () => {
     expect(firebaseDocToChecklist(checklistDoc)).toEqual({
       "weak.cancer_diagnosis": true,
     });
+  });
+
+  it("rejects invalid generated report payloads before Firestore writes", () => {
+    const reportDoc = reportToFirebaseDoc(buildKimMinjiSummary(), {
+      source: "template",
+      text: "report body",
+    });
+
+    expect(() =>
+      firebaseReportDocSchema.parse({
+        ...reportDoc,
+        report: { source: "manual", text: "report body" },
+      }),
+    ).toThrow();
+    expect(() =>
+      firebaseReportDocSchema.parse({
+        ...reportDoc,
+        report: { source: "template", text: "" },
+      }),
+    ).toThrow();
   });
 
   it("uses Google auth as the only MVP user doc auth type", () => {
@@ -122,5 +168,16 @@ describe("Firebase schema contract", () => {
         },
       }),
     ).toThrow();
+  });
+
+  it("keeps Firestore rules aligned with consent, report, and money guards", () => {
+    const rules = readFileSync(new URL("../firestore.rules", import.meta.url), "utf8");
+
+    expect(rules).toContain("function validConsentMap()");
+    expect(rules).toContain("request.resource.data.consent.keys().hasOnly");
+    expect(rules).toContain("function validGeneratedReport()");
+    expect(rules).toContain("request.resource.data.report.text.size() <= 3000");
+    expect(rules).toContain("optionalNonNegativeNullableNumber('coverageAmount')");
+    expect(rules).toContain("optionalNonNegativeNumber('monthlyPremium')");
   });
 });

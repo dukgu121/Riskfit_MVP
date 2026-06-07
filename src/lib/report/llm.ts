@@ -56,9 +56,14 @@ export async function generateReport(
       return templateFallback(summary, 'bad_response')
     }
 
+    const text = sanitizeReport(parsed.data.text)
+    if (!text) {
+      return templateFallback(summary, 'empty_response')
+    }
+
     return {
       source: 'codex',
-      text: sanitizeReport(parsed.data.text),
+      text,
     }
   } catch (error) {
     const reason = error instanceof Error ? error.name : 'fetch_failed'

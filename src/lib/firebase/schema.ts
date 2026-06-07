@@ -64,7 +64,16 @@ export function checklistDocPath(uid: string): string {
 const nullableStringSchema = z.string().nullable().optional();
 const nullableBooleanSchema = z.boolean().nullable().optional();
 const numericFormValueSchema = z.union([z.string(), z.number()]).optional();
-const nullableNumberSchema = z.number().nullable().optional();
+const nullableNonNegativeNumberSchema = z
+  .number()
+  .nonnegative()
+  .nullable()
+  .optional();
+const firestoreDocumentIdSchema = z
+  .string()
+  .min(1)
+  .max(128)
+  .regex(/^[^/]+$/, "Firestore document IDs cannot contain '/'.");
 
 export const genderSchema = z.enum(["female", "male", "other"]);
 export const jobGroupSchema = z.enum([
@@ -199,11 +208,11 @@ export const firebaseUserDocSchema = z
 export const firebaseInsuranceDocSchema = z
   .object({
     schemaVersion: z.literal(FIREBASE_SCHEMA_VERSION),
-    id: z.string().min(1),
+    id: firestoreDocumentIdSchema,
     company: z.string().optional(),
     productName: z.string().optional(),
     coverageType: coverageTypeIdSchema,
-    coverageAmount: nullableNumberSchema,
+    coverageAmount: nullableNonNegativeNumberSchema,
     amountUnit: amountUnitSchema,
     monthlyPremium: z.number().nonnegative().optional(),
     joinedAt: nullableStringSchema,

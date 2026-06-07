@@ -1,6 +1,6 @@
 /**
- * 404 fallback. The router also wildcard-matches "*" → "/" so this is mostly
- * a defensive page in case we ever surface a "broken link" experience.
+ * 404 fallback. The router wildcard-matches "*" to this page while keeping it
+ * inside the authenticated app shell.
  */
 
 import { Link } from "react-router-dom";

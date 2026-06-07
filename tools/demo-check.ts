@@ -1,4 +1,4 @@
-const port = Number(process.env.PORT ?? process.env.RISKFIT_SIDECAR_PORT ?? 5174)
+const port = Number(process.env.PORT ?? process.env.RISKFIT_SIDECAR_PORT ?? 47821)
 const host = process.env.HOST ?? process.env.RISKFIT_SIDECAR_HOST ?? '127.0.0.1'
 const url = `http://${host}:${port}/health`
 

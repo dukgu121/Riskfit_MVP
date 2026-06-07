@@ -16,6 +16,7 @@ import {
 } from "react";
 import type { User } from "firebase/auth";
 
+import { clearLocalState } from "../storage";
 import { isFirebaseConfigured } from "./app";
 import { signInWithGoogle, signOutUser, subscribeToAuth } from "./auth";
 import { AuthContext, type AuthContextValue } from "./authContext";
@@ -39,6 +40,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     await signOutUser();
+    // 브라우저 공유 캐시를 비워, 다음 로그인(다른 계정일 수 있음)이 깨끗한
+    // 상태에서 시작하도록 한다. 그 계정의 데이터는 로그인 시 클라우드에서 복원된다.
+    clearLocalState({ emit: false });
   }, []);
 
   const value = useMemo<AuthContextValue>(

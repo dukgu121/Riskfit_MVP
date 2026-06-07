@@ -14,16 +14,69 @@ service cloud.firestore {
       return request.resource.data.schemaVersion == 1;
     }
 
+    function optionalTimestamp(field) {
+      return !(field in request.resource.data)
+        || request.resource.data[field] is timestamp;
+    }
+
+    function optionalConsentTimestamp(field) {
+      return !(field in request.resource.data.consent)
+        || request.resource.data.consent[field] is timestamp;
+    }
+
     function optionalString(field) {
       return !(field in request.resource.data)
         || request.resource.data[field] == null
         || request.resource.data[field] is string;
     }
 
-    function optionalNumber(field) {
+    function optionalStrictString(field) {
+      return !(field in request.resource.data)
+        || request.resource.data[field] is string;
+    }
+
+    function optionalNonNegativeNumber(field) {
+      return !(field in request.resource.data)
+        || (request.resource.data[field] is number
+          && request.resource.data[field] >= 0);
+    }
+
+    function optionalNonNegativeNullableNumber(field) {
       return !(field in request.resource.data)
         || request.resource.data[field] == null
-        || request.resource.data[field] is number;
+        || (request.resource.data[field] is number
+          && request.resource.data[field] >= 0);
+    }
+
+    function validConsentMap() {
+      return request.resource.data.consent is map
+        && request.resource.data.consent.keys().hasOnly([
+          'accepted',
+          'version',
+          'acceptedAt',
+          'updatedAt',
+        ])
+        && request.resource.data.consent.accepted is bool
+        && request.resource.data.consent.version is string
+        && optionalConsentTimestamp('updatedAt')
+        && (!(request.resource.data.consent.keys().hasAny(['acceptedAt']))
+          || (request.resource.data.consent.accepted == true
+            && request.resource.data.consent.acceptedAt is timestamp));
+    }
+
+    function validGeneratedReport() {
+      return request.resource.data.report is map
+        && request.resource.data.report.keys().hasOnly([
+          'source',
+          'text',
+          'errorReason',
+        ])
+        && request.resource.data.report.source in ['codex', 'template']
+        && request.resource.data.report.text is string
+        && request.resource.data.report.text.size() > 0
+        && request.resource.data.report.text.size() <= 3000
+        && (!(request.resource.data.report.keys().hasAny(['errorReason']))
+          || request.resource.data.report.errorReason is string);
     }
 
     function validUserDoc() {
@@ -37,9 +90,10 @@ service cloud.firestore {
           'lastActiveAt',
         ])
         && request.resource.data.authType == 'google'
-        && request.resource.data.consent is map
-        && request.resource.data.consent.accepted is bool
-        && request.resource.data.consent.version is string;
+        && validConsentMap()
+        && optionalTimestamp('createdAt')
+        && optionalTimestamp('updatedAt')
+        && optionalTimestamp('lastActiveAt');
     }
 
     function validProfileDoc() {
@@ -60,7 +114,9 @@ service cloud.firestore {
         && request.resource.data.health is map
         && request.resource.data.familyHistory is list
         && (!(request.resource.data.keys().hasAny(['completedSteps']))
-          || request.resource.data.completedSteps is list);
+          || request.resource.data.completedSteps is list)
+        && optionalTimestamp('createdAt')
+        && optionalTimestamp('updatedAt');
     }
 
     function validInsuranceDoc(insuranceId) {
@@ -79,6 +135,7 @@ service cloud.firestore {
           'createdAt',
           'updatedAt',
         ])
+        && insuranceId.size() <= 128
         && request.resource.data.id == insuranceId
         && request.resource.data.coverageType in [
           'actual_medical',
@@ -100,13 +157,15 @@ service cloud.firestore {
           'krw_per_day',
           'krw_per_month',
         ]
-        && optionalString('company')
-        && optionalString('productName')
-        && optionalNumber('coverageAmount')
-        && optionalNumber('monthlyPremium')
+        && optionalStrictString('company')
+        && optionalStrictString('productName')
+        && optionalNonNegativeNullableNumber('coverageAmount')
+        && optionalNonNegativeNumber('monthlyPremium')
         && optionalString('joinedAt')
         && (!(request.resource.data.keys().hasAny(['source']))
-          || request.resource.data.source == 'manual');
+          || request.resource.data.source == 'manual')
+        && optionalTimestamp('createdAt')
+        && optionalTimestamp('updatedAt');
     }
 
     function validReportDoc() {
@@ -118,7 +177,8 @@ service cloud.firestore {
           'createdAt',
         ])
         && request.resource.data.summary is map
-        && request.resource.data.report is map;
+        && validGeneratedReport()
+        && optionalTimestamp('createdAt');
     }
 
     function validChecklistDoc() {
@@ -128,7 +188,8 @@ service cloud.firestore {
           'checkedIds',
           'updatedAt',
         ])
-        && request.resource.data.checkedIds is list;
+        && request.resource.data.checkedIds is list
+        && optionalTimestamp('updatedAt');
     }
 
     match /users/{uid} {

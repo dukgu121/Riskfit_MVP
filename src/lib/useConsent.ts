@@ -62,14 +62,11 @@ export function useConsent(): UseConsentReturn {
       remove(STORAGE_KEYS.consent);
     }
     setConsentState(next);
-    // Notify other useConsent() instances in this tab.
-    window.dispatchEvent(new Event("riskfit:consent-change"));
   }, []);
 
   const clearConsent = useCallback(() => {
     remove(STORAGE_KEYS.consent);
     setConsentState(false);
-    window.dispatchEvent(new Event("riskfit:consent-change"));
   }, []);
 
   return { consent, setConsent, clearConsent };

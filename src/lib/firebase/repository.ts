@@ -1,5 +1,6 @@
 import {
   collection,
+  deleteField,
   doc,
   getDoc,
   getDocs,
@@ -45,7 +46,7 @@ export async function saveUserConsent(
     consent: {
       accepted,
       version: "mvp-privacy-v1",
-      acceptedAt: accepted ? serverTimestamp() : undefined,
+      acceptedAt: accepted ? serverTimestamp() : deleteField(),
       updatedAt: serverTimestamp(),
     },
     updatedAt: serverTimestamp(),
@@ -106,14 +107,15 @@ export async function saveInsurances(
 
   const colRef = collection(fb.db, insurancesCollectionPath(uid));
   const existing = await getDocs(colRef);
-  const nextIds = new Set(insurances.map((insurance) => insurance.id));
+  const nextDocs = insurances.map(insuranceToFirebaseDoc);
+  const nextIds = new Set(nextDocs.map((insurance) => insurance.id));
   const batch = writeBatch(fb.db);
 
-  for (const insurance of insurances) {
+  for (const insurance of nextDocs) {
     batch.set(
       doc(fb.db, insuranceDocPath(uid, insurance.id)),
       stripUndefined({
-        ...insuranceToFirebaseDoc(insurance),
+        ...insurance,
         updatedAt: serverTimestamp(),
       }),
       { merge: true },

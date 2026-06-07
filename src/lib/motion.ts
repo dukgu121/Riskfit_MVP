@@ -8,7 +8,7 @@
  *
  * Usage:
  *   import { motion } from "motion/react";
- *   import { fadeIn } from "@/lib/motion";
+ *   import { fadeIn } from "../lib/motion";
  *
  *   <motion.div {...fadeIn}> ... </motion.div>
  */

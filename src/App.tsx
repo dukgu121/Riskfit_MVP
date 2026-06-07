@@ -2,18 +2,25 @@
  * App entry composition.
  *
  * The real layout and routing live in `src/router.tsx` (which renders an
- * `<AppLayout/>` outlet host with all the route definitions). This file is
- * intentionally tiny — it just hands the router off to `<RouterProvider/>`
- * so the rest of the app can rely on data router primitives (loaders, lazy
- * routes, `useNavigate`, etc.) without further setup.
+ * `<AppLayout/>` outlet host with all the route definitions). Keep this
+ * component aligned with `main.tsx` so tests or future entrypoints importing
+ * `<App />` get the same auth and cloud-sync providers as the browser entry.
  */
 
 import { RouterProvider } from "react-router-dom";
 
+import { AuthProvider } from "./lib/firebase/AuthProvider";
+import { RiskfitCloudSync } from "./lib/firebase/RiskfitCloudSync";
 import { router } from "./router";
 
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <AuthProvider>
+      <RiskfitCloudSync>
+        <RouterProvider router={router} />
+      </RiskfitCloudSync>
+    </AuthProvider>
+  );
 }
 
 export default App;

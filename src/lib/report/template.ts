@@ -74,8 +74,9 @@ export function buildTemplateReport(summary: ReportSummary): string {
       `${fitHead} 전체 ${totalItems}개 항목 중 ${weak.length}개(${weak.join(', ')})가 표준보다 부족해요.`,
     )
   } else if (caution.length > 0) {
+    const cautionText = caution.join(', ')
     paragraphs.push(
-      `${fitHead} 표준과 가깝지만 한 번 점검이 필요한 항목은 ${caution.join(', ')}이에요.`,
+      `${fitHead} 표준과 가깝지만 한 번 점검이 필요한 항목은 ${cautionText}${copulaEnding(cautionText)}.`,
     )
   } else {
     paragraphs.push(`${fitHead} ${totalItems}개 항목이 대체로 표준 수준이에요.`)
@@ -84,8 +85,9 @@ export function buildTemplateReport(summary: ReportSummary): string {
   // 3b. Over-insured signal — surfaced independently of the gap above, since a
   //     user can be both under- and over-insured on different coverages.
   if (excessive.length > 0) {
+    const excessiveText = excessive.join(', ')
     paragraphs.push(
-      `${excessive.join(', ')}은 표준보다 많은 편이라, 보장이 겹치는지 한 번 살펴봐도 좋아요.`,
+      `${excessiveText}${topicParticle(excessiveText)} 표준보다 많은 편이라, 보장이 겹치는지 한 번 살펴봐도 좋아요.`,
     )
   }
 
@@ -125,10 +127,22 @@ function naturalRiskLabel(bandLabel: string): string {
  * character of a label. Used when joining two equal top risk factors.
  */
 function joinParticle(label: string): string {
-  const lastChar = label.slice(-1)
+  return hasFinalConsonant(label) ? '과' : '와'
+}
+
+function topicParticle(label: string): string {
+  return hasFinalConsonant(label) ? '은' : '는'
+}
+
+function copulaEnding(label: string): string {
+  return hasFinalConsonant(label) ? '이에요' : '예요'
+}
+
+function hasFinalConsonant(label: string): boolean {
+  const lastChar = label.trim().slice(-1)
   const code = lastChar.charCodeAt(0)
   // Hangul syllable block: 0xAC00 ~ 0xD7A3.
-  if (code < 0xac00 || code > 0xd7a3) return '와'
+  if (code < 0xac00 || code > 0xd7a3) return false
   const jongseong = (code - 0xac00) % 28
-  return jongseong === 0 ? '와' : '과'
+  return jongseong !== 0
 }

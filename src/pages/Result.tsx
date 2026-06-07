@@ -186,17 +186,22 @@ function describeFinance(
   return { interpretation, reasons };
 }
 
+function hasUsableProfile(profile: UserProfileInput): boolean {
+  return calculateCompleteness(profile, []).completed > 0;
+}
+
 /* ----------------------------------------------------------------------
    Main page
    ---------------------------------------------------------------------- */
 
 export function Result() {
-  const profile = readProfile<UserProfileInput>();
-  const insurances = readInsurances<Insurance>();
+  const profile = useMemo(() => readProfile<UserProfileInput>(), []);
+  const insurances = useMemo(() => readInsurances<Insurance>(), []);
   const [activeTab, setActiveTab] = useState<ResultTabId>("dashboard");
+  const profileReady = hasUsableProfile(profile);
 
   const data = useMemo(() => {
-    if (!profile) return null;
+    if (!profileReady) return null;
     const userType = selectUserType(profile);
     const riskScore = totalRiskScore(profile, insurances);
     const coverageFit = coverageFitOf(insurances, userType);
@@ -218,9 +223,9 @@ export function Result() {
       completeness: completeness.percent,
     };
     return { riskScore, coverageFit, outOfPocket, userType, summary };
-  }, [profile, insurances]);
+  }, [profileReady, profile, insurances]);
 
-  if (!profile || !data) {
+  if (!profileReady || !data) {
     return <Navigate to="/input/basic" replace />;
   }
 
