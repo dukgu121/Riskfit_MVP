@@ -97,7 +97,7 @@ function emitStorageChange(
 
 /**
  * Canonical keys used across RiskFit. Centralising them prevents typos and
- * makes it trivial to wipe state for tests / reset flows.
+ * makes it trivial to wipe state for reset flows.
  *
  * Input wizard splits the profile into three slices (basic / health / family
  * history) plus an insurances list. Aggregated `profile` / `insurance` keys

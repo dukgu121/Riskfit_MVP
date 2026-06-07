@@ -61,7 +61,7 @@ export function buildTemplateReport(summary: ReportSummary): string {
     paragraphs.push(`세부 영역 중 ${top.label}이 ${top.value}점으로 가장 높아요.`)
   }
 
-  // 3. Coverage fit — keep "보장 적합도는 N%" prefix verbatim (used in tests).
+  // 3. Coverage fit — keep "보장 적합도는 N%" prefix stable for downstream UI.
   //    Surface explicit "전체 N개 항목 중 M개" ratio when a weakness exists,
   //    so the user sees the denominator rather than only a percentage.
   const weak = coverageFit.weakCoverages

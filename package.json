@@ -4,14 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --config config/vite.config.ts",
     "codex": "tsx tools/codex-server.ts",
     "dev:all": "concurrently -k -n vite,sidecar npm:dev npm:codex",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "build": "tsc -b config/tsconfig.json && vite --config config/vite.config.ts build",
+    "lint": "eslint . --config config/eslint.config.js",
+    "preview": "vite --config config/vite.config.ts preview",
     "demo:check": "tsx tools/demo-check.ts"
   },
   "dependencies": {
@@ -56,7 +54,6 @@
     "tsx": "^4.22.3",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
-    "vite": "^8.0.12",
-    "vitest": "^4.1.7"
+    "vite": "^8.0.12"
   }
 }

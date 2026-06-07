@@ -3,8 +3,8 @@
  *
  * The real layout and routing live in `src/router.tsx` (which renders an
  * `<AppLayout/>` outlet host with all the route definitions). Keep this
- * component aligned with `main.tsx` so tests or future entrypoints importing
- * `<App />` get the same auth and cloud-sync providers as the browser entry.
+ * component aligned with `main.tsx` so future entrypoints importing `<App />`
+ * get the same auth and cloud-sync providers as the browser entry.
  */
 
 import { RouterProvider } from "react-router-dom";

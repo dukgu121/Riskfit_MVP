@@ -6,8 +6,8 @@ import express, {
   type Request,
   type Response,
 } from 'express'
-import { reportSummarySchema, type ReportSummarySchema } from '../src/lib/report/schema.ts'
-import { REPORT_DISCLAIMER } from '../src/lib/report/template.ts'
+import { reportSummarySchema, type ReportSummarySchema } from '../app/src/lib/report/schema.ts'
+import { REPORT_DISCLAIMER } from '../app/src/lib/report/template.ts'
 
 const DEFAULT_ALLOWED_ORIGINS =
   'http://localhost:38215,http://127.0.0.1:38215'

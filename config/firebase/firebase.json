@@ -1,0 +1,5 @@
+{
+  "firestore": {
+    "rules": "config/firebase/firestore.rules"
+  }
+}
