@@ -64,8 +64,8 @@ export function PremiumReport() {
   const labels = curve.map((p) => String(p.age));
   const values = curve.map((p) => p.risk);
 
-  // RESET#3 (MIGRATION_PLAN p29): scoped reset (keeps consent + premium) then
-  // re-enters the wizard, asking /analyzing to return here via ?return=.
+  // Scoped reset (keeps consent + premium), then re-enter the wizard and ask
+  // /analyzing to return here via ?return=.
   const reDiagnose = () => {
     resetDiagnosis();
     navigate("/input/basic?return=premium-report");

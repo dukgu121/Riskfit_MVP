@@ -1,18 +1,16 @@
 /**
- * `lib/report/areaComments.ts` — DETERMINISTIC, template-driven one-liners for
- * the result drill-down screens. NOT an LLM call (the async `generateReport`
- * lives elsewhere); these resolve synchronously off the score band + the top
- * contributing factor so the same input always yields the same copy.
+ * Deterministic, template-driven one-liners for the result drill-down screens.
+ * NOT an LLM call (the async `generateReport` lives elsewhere); these resolve
+ * synchronously off the score band + the top contributing factor, so the same
+ * input always yields the same copy.
  *
  * Two surfaces:
  *   - `areaComment(area, score, topFactorLabel?)` — the single AI 코멘트 shown
- *     on p17 (overview) and p18–p22 (per-area detail).
- *   - `buildSummaryBlurb(...)` — the 1-line summary on the p16 result screen,
- *     framed around 보장 적합도 FIT (NOT risk), per the FIT/RISK polarity
- *     contract (MIGRATION_PLAN §9).
+ *     on the overview and per-area detail screens.
+ *   - `buildSummaryBlurb(...)` — the 1-line summary on the result screen, framed
+ *     around 보장 적합도 FIT (NOT risk), per the FIT/RISK polarity contract.
  *
- * Toss tone: friendly 해요체, concrete, never alarmist. Import DIRECTLY
- * (`../report/areaComments`); this is a net-new module, not in any barrel.
+ * Toss tone: friendly 해요체, concrete, never alarmist.
  */
 
 import type { AreaId } from "../calc/riskContributions";
@@ -99,11 +97,11 @@ export function areaComment(
 }
 
 /* ------------------------------------------------------------------ */
-/*  Overview (p17) comment off the TOTAL risk score + worst area       */
+/*  Overview comment off the TOTAL risk score + worst area             */
 /* ------------------------------------------------------------------ */
 
 /**
- * One-liner for the p17 overview, framed on the TOTAL 위험점수 and the
+ * One-liner for the overview screen, framed on the TOTAL 위험점수 and the
  * highest-contributing area.
  */
 export function overviewComment(
@@ -122,7 +120,7 @@ export function overviewComment(
 }
 
 /* ------------------------------------------------------------------ */
-/*  p16 summary blurb — framed on 보장 적합도 FIT (NOT risk)            */
+/*  Result-screen summary blurb — framed on 보장 적합도 FIT (NOT risk)  */
 /* ------------------------------------------------------------------ */
 
 export interface SummaryBlurbInput {
@@ -139,9 +137,9 @@ export interface SummaryBlurbInput {
 }
 
 /**
- * Deterministic 1-line summary for the p16 result screen. Always speaks in
- * terms of 보장 적합도 (FIT) and the biggest GAP — never a risk-score
- * "improvement" (polarity contract). Resolves instantly; no async report.
+ * Deterministic 1-line summary for the result screen. Always speaks in terms
+ * of 보장 적합도 (FIT) and the biggest GAP — never a risk-score "improvement"
+ * (polarity contract). Resolves instantly; no async report.
  */
 export function buildSummaryBlurb(input: SummaryBlurbInput): string {
   const { fitScore, fitBand, weakCoverages, cautionCoverages } = input;

@@ -1,6 +1,5 @@
 /**
- * `lib/report/aiContent.ts` — the ONE AI-copy layer for every post-/analyzing
- * screen (REPORT_AI_DESIGN.md, Agent A foundation).
+ * The single AI-copy layer for every post-/analyzing screen.
  *
  * ARCHITECTURE
  *   - `/analyzing` calls `generateAiContent(input)` ONCE (after
@@ -70,13 +69,13 @@ export interface AiContentAreaInput {
 export interface AiContentInput {
   /** Analysis-derived summary — grounding whitelist + signature source. */
   summary: ReportSummary
-  /** p16 요약 줄 fallback input (`buildSummaryBlurb`). */
+  /** 요약 줄 fallback input (`buildSummaryBlurb`). */
   resultSummary: SummaryBlurbInput
-  /** p17 위험 개요 fallback input (`overviewComment`). */
+  /** 위험 개요 fallback input (`overviewComment`). */
   riskOverview: { totalRisk: number; worstAreaLabel?: string }
-  /** p18–p22 영역별 fallback input (`areaComment`). */
+  /** 영역별 fallback input (`areaComment`). */
   areas: Record<AiContentAreaId, AiContentAreaInput>
-  /** p23 인트로 fallback input (gain in %p; `allDone` when nothing to fill). */
+  /** 개선 인트로 fallback input (gain in %p; `allDone` when nothing to fill). */
   improveIntro: { gain: number; allDone: boolean }
 }
 
@@ -84,7 +83,7 @@ export interface AiContentInput {
 /*  Deterministic template fallbacks (one per field)                  */
 /* ------------------------------------------------------------------ */
 
-/** p23 Improve intro — mirrors the existing copy in `pages/improve/Improve.tsx`. */
+/** Improve intro — mirrors the existing copy in `pages/improve/Improve.tsx`. */
 export function improveIntroTemplate(input: {
   gain: number
   allDone: boolean

@@ -1,18 +1,14 @@
 /**
- * p8 「가입 보험」 — the insurance HUB (input step 5/5), restyled Toss-web.
+ * p8 「가입 보험」 — the insurance hub (input step 5/5).
  *
- * The PDF's free-form "add policies" list is replaced by a FIXED 6-row overview
- * (one per user-facing 보장 type, OD-11). Each row shows 입력완료 / 미가입 /
- * 미입력 + a band badge, and is a Link into that type's 세부 screen
- * (`/input/insurance/:coverageType`). Persistence happens inside the sub-screens
- * (one type at a time) via `riskfit.insurances`; this page only READS that list
- * and re-derives the row states.
+ * A fixed 6-row overview, one per user-facing 보장 type. Each row shows
+ * 입력완료 / 미가입 / 미입력 + a band badge and links into that type's 세부
+ * screen (`/input/insurance/:coverageType`). Persistence happens inside the
+ * sub-screens (one type at a time) via `riskfit.insurances`; this page only
+ * READS that list and re-derives the row states.
  *
- * The primary CTA "분석 시작" is ALWAYS enabled — a user can analyse with any
- * subset filled in; 미입력 types are simply treated as 공백 (gaps) by the engine.
- *
- * Wrapped in `AppShell` (maxWidth 600, matching the p4–p7 입력 위저드 column).
- * No phone frame.
+ * The primary CTA "분석 시작" is always enabled — a user can analyse with any
+ * subset filled in; 미입력 types are treated as 공백 (gaps) by the engine.
  */
 
 import { useMemo } from "react";
@@ -44,8 +40,7 @@ export function InputInsurance() {
   // without a manual refetch — and without setState-in-effect.
   const insurances = useMemo<Insurance[]>(
     () => read<Insurance[]>(STORAGE_KEYS.insurances, []),
-    // location.key changes on every navigation → intentionally re-read storage
-    // when the user returns from a 세부 screen (cache-bust, not an unused dep).
+    // location.key is the intentional cache-bust dep, not an unused one.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [location.key],
   );

@@ -1,13 +1,12 @@
 /**
- * `lib/preview/sampleData.ts` — a realistic full sample for the ungated review
- * surface. Lets the whole migration be reviewed WITHOUT login or walking the
- * wizard: `seedPreview()` writes the sample profile slices + insurances to
- * localStorage and computes the analysis cache, so screens 16–29 have real data
- * to render.
+ * A realistic full sample for the ungated review surface. Lets the whole app be
+ * reviewed WITHOUT login or walking the wizard: `seedPreview()` writes the
+ * sample profile slices + insurances to localStorage and computes the analysis
+ * cache, so the result/improve/report screens have real data to render.
  *
- * The sample is tuned to the gold-reference story (MIGRATION_PLAN, OD-11):
- * a 20s new worker whose 6 user-facing 보장 mix 충분 / 주의 / 미가입 so the
- * summary lands around the "주의" band with a couple of fixable gaps.
+ * The sample is tuned to the reference story: a 20s new worker whose 6
+ * user-facing 보장 mix 충분 / 주의 / 미가입 so the summary lands around the
+ * "주의" band with a couple of fixable gaps.
  *
  * IMPORTANT — slice shape: this writes to the SAME slice keys the wizard uses
  * (`riskfit.profile.basic` with `*Man` 만원 keys, `riskfit.profile.health`,
@@ -55,7 +54,7 @@ const SAMPLE_HEALTH = {
   sleep: "hours_6_7",
   stress: "high",
   overtime: "weekly_1_2",
-  // NEW p5/p6 fields exercised so the schema round-trips them.
+  // Health/lifestyle fields exercised so the schema round-trips them.
   chronicConditions: ["none"],
   bloodPressure: "normal",
   bloodSugar: "caution",

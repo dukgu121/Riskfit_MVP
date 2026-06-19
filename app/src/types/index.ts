@@ -28,8 +28,8 @@ export type SmokingStatus = 'no' | 'yes'
 export type DrinkingFrequency = 'rare' | 'weekly_1_2' | 'weekly_3_plus'
 
 /**
- * Chronic conditions captured on the 건강정보 screen (p5). Multi-select with an
- * exclusive `none`. The risk engine CONSUMES these via
+ * Chronic conditions captured on the 건강정보 screen. Multi-select with an
+ * exclusive `none`. The risk engine consumes these via
  * `scoringRules.health.chronicConditions` (scoreChronicConditions in
  * healthRisk.ts); additive and optional. `other` is a catch-all for conditions
  * outside the listed set.
@@ -50,7 +50,7 @@ export type ChronicCondition =
  */
 export type VitalBand = 'normal' | 'caution' | 'high'
 
-/** Diet habit captured on 생활습관 (p6). Feeds the weighted lifestyle total. */
+/** Diet habit captured on 생활습관. Feeds the weighted lifestyle total. */
 export type DietHabit = 'balanced' | 'irregular' | 'high_sodium' | 'high_fat'
 export type ExerciseFrequency =
   | 'weekly_3_plus'
@@ -108,12 +108,11 @@ export interface UserProfile {
   stress: StressLevel
   overtime: OvertimeFrequency
 
-  /* --- NEW health/lifestyle fields (all optional, backward compatible) ---
-     Added for PDF p5/p6 fidelity. The risk engine now CONSUMES these:
-     chronicConditions + the three vital bands feed healthRisk
-     (scoringRules.health.chronicConditions/vital); dietHabit feeds
-     lifestyleRisk (scoringRules.lifestyle.dietHabit). Per-factor parity is
-     verified by tools/smoke-health-fields.ts. */
+  /* --- Health/lifestyle fields (all optional, backward compatible) ---
+     The risk engine consumes these: chronicConditions + the three vital bands
+     feed healthRisk (scoringRules.health.chronicConditions/vital); dietHabit
+     feeds lifestyleRisk (scoringRules.lifestyle.dietHabit). Per-factor parity
+     is verified by tools/smoke-health-fields.ts. */
   /** Multi-select chronic conditions (exclusive `none`). */
   chronicConditions?: ChronicCondition[]
   /** Self-reported blood-pressure band. */
@@ -234,11 +233,11 @@ export interface ReportSummary {
   expectedOutOfPocketText: string
   completeness: number
 
-  /* --- Report-AI edge fields (Phase 1) -------------------------------------
+  /* --- Report-AI edge fields ------------------------------------------------
      Data the engine already computes but the report historically discarded.
      Injecting it lets the LLM write the one cross-domain causal sentence the
-     template structurally cannot (REPORT_AI_DESIGN.md §2-4). MUST stay in sync
-     with `reportSummarySchema` (.strict) — adding here without schema.ts makes
+     template structurally cannot. MUST stay in sync with `reportSummarySchema`
+     (.strict) — adding a field here without also adding it to schema.ts makes
      the sidecar reject the body and silently fall back to the template. */
   /** Top engine-REAL 위험 기여 요인 (demoMock 제외). 인과 헤드라인 근거. */
   topRiskFactors: Array<{
@@ -281,35 +280,35 @@ export type AiContentAreaId =
   | 'financial'
 
 /**
- * One AI-written copy bundle covering EVERY post-/analyzing screen's prose
- * (REPORT_AI_DESIGN.md). Generated ONCE at `/analyzing` and cached, so the
- * single busy-mutexed sidecar is hit a single time per analysis instead of per
- * screen. Each field is the FINAL string the screen renders — already either
- * the grounded AI sentence or its deterministic template fallback, so screens
- * read their field directly (`readAiContent()?.field`).
+ * One AI-written copy bundle covering every post-/analyzing screen's prose.
+ * Generated once at `/analyzing` and cached, so the single busy-mutexed sidecar
+ * is hit a single time per analysis instead of per screen. Each field is the
+ * FINAL string the screen renders — already either the grounded AI sentence or
+ * its deterministic template fallback — so screens read it directly
+ * (`readAiContent()?.field`).
  *
  * NUMBERS ARE NEVER AUTHORED BY AI: every field is run through
  * `isReportGrounded` against the analysis whitelist; a field carrying a
- * hallucinated score/amount is replaced by its template, field-by-field. The
+ * hallucinated score/amount is replaced by its template, field by field. The
  * scoring engine owns all 점수·금액·% — AI only quotes/interprets them.
  *
  * Field → screen → template fallback:
- *   resultSummary → ResultSummary (p16) → buildSummaryBlurb
- *   riskOverview  → RiskDetail (p17)    → overviewComment
- *   areas.*       → AreaDetail (p18–22) → areaComment(area, …)
- *   improveIntro  → Improve (p23)       → (the existing Improve intro copy)
- *   report        → Report (p26)        → buildTemplateReport (incl. 면책)
+ *   resultSummary → ResultSummary → buildSummaryBlurb
+ *   riskOverview  → RiskDetail    → overviewComment
+ *   areas.*       → AreaDetail    → areaComment(area, …)
+ *   improveIntro  → Improve       → (the existing Improve intro copy)
+ *   report        → Report        → buildTemplateReport (incl. 면책)
  */
 export interface AiContentPackage {
-  /** p16 요약 1줄 (보장 적합도 FIT 프레이밍). */
+  /** 요약 1줄 (보장 적합도 FIT 프레이밍). */
   resultSummary: string
-  /** p17 위험 개요 코멘트 (총 위험점수 + 최다 기여 영역). */
+  /** 위험 개요 코멘트 (총 위험점수 + 최다 기여 영역). */
   riskOverview: string
-  /** p18–p22 영역별 코멘트 (영역 점수 + top real 기여 기반). */
+  /** 영역별 코멘트 (영역 점수 + 실제 기여 상위 기반). */
   areas: Record<AiContentAreaId, string>
-  /** p23 인트로 문장 (지금 → 개선 후 적합도 프레이밍). */
+  /** 인트로 문장 (지금 → 개선 후 적합도 프레이밍). */
   improveIntro: string
-  /** p26 최종 리포트 줄글 (면책 마지막 줄 포함). */
+  /** 최종 리포트 줄글 (면책 마지막 줄 포함). */
   report: string
 }
 
@@ -327,15 +326,15 @@ export interface AiContentCache {
 }
 
 /**
- * Single analysis cache (MIGRATION_PLAN §7). `/analyzing` computes the full
- * analysis ONCE and writes it here (`riskfit.analysis`); every result/improve/
- * report/premium screen reads it READ-ONLY via `lib/draft.ts`. No screen
- * recomputes `totalRiskScore`/`coverageFit`/`outOfPocket` directly — that
- * prevents headline-number drift across the flow.
+ * The single analysis cache. `/analyzing` computes the full analysis ONCE and
+ * writes it here (`riskfit.analysis`); every result/improve/report/premium
+ * screen reads it READ-ONLY via `lib/draft.ts`. No screen recomputes
+ * `totalRiskScore`/`coverageFit`/`outOfPocket` directly — that keeps headline
+ * numbers from drifting across the flow.
  *
  * Polarity (frozen contract):
  *   - `coverageFit.overall` = 보장 적합도 FIT (higher = better) — restricted to
- *     the 6 user-facing coverage types (OD-11).
+ *     the 6 user-facing coverage types.
  *   - `riskScore.total` = 위험점수 RISK (higher = worse).
  */
 export interface AnalysisCache {
@@ -359,7 +358,7 @@ export const ANALYSIS_CACHE_VERSION = 1
 /**
  * Premium (demo paywall) state, persisted to `riskfit.premium` (localStorage
  * only — NOT synced to Firestore). `subscribed` flips when the user taps
- * 구독하기 on p27; it survives 재진단 (resetDiagnosis keeps it).
+ * 구독하기 on the paywall; it survives 재진단 (resetDiagnosis keeps it).
  */
 export interface PremiumState {
   subscribed: boolean

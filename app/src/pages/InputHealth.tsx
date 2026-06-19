@@ -5,8 +5,7 @@
  * 키/체중 → BMI 리드아웃, 혈압/혈당/콜레스테롤 → VitalBand SegmentedControl.
  * 기존 InputHealthLifestyle의 건강검진/치료중질병/병원방문빈도도 유지한다.
  *
- * 데스크톱 WEB 톤: WizardShell(단일 컬럼 ≈600). 새 필드(chronicConditions /
- * bloodPressure / bloodSugar / cholesterol)는 Agent A가 타입+스키마로 검증해 둠.
+ * 데스크톱 WEB 톤: WizardShell(단일 컬럼 ≈600).
  *
  * 영속화: `riskfit.profile.health` 슬라이스. 생활습관(p6)도 같은 슬라이스를 쓰므로
  * **머지**해서 저장한다(이 화면이 소유한 필드만 패치 — 상대 화면 필드를 덮지 않음).

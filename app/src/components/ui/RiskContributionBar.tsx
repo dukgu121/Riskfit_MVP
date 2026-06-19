@@ -7,7 +7,7 @@
  * good vs bad, not the sign).
  *
  * Colour: pass an explicit `band`, or let it derive from the delta's share of
- * `max` (low→neutral/blue, mid→warn, high→danger). Bar width = `delta/max`.
+ * `max` (low neutral/blue, mid warn, high danger). Bar width = `delta/max`.
  */
 
 import { useEffect, useState, type ReactNode } from "react";
@@ -25,7 +25,7 @@ export interface RiskContributionBarProps {
   max?: number;
   /**
    * Override the colour band. When omitted it derives from `delta/max`:
-   *   < 0.34 → low, < 0.67 → medium, else high.
+   *   < 0.34 low, < 0.67 medium, else high.
    */
   band?: ContributionBand;
   /** Optional leading glyph/icon. */

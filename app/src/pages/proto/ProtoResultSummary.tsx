@@ -1,18 +1,14 @@
 /**
- * PROTOTYPE — p16 「분석 결과 요약」 restyled in minimal Toss style, WEB layout.
- * Ungated route `/proto/result`.
+ * PROTOTYPE — p16 「분석 결과 요약」 in the minimal Toss web layout. Ungated route
+ * `/proto/result`.
  *
- * Direction (PO, 2026-06-14): desktop web app, no phone frame. Uses the shared
- * `AppShell` (sticky web header + max-width container) and a two-column grid
- * (hero left, coverage detail right). Same content/components/flow as PDF p16;
- * only the layout is web-native.
+ * Desktop web, no phone frame: shared `AppShell` + a two-column grid (hero left,
+ * coverage detail right). The visual reference for the style — single brand
+ * accent, one big tabular hero number, gray surface tints over borders, colour
+ * only on band badges / bar fills, one primary CTA.
  *
- * Demonstrates MIGRATION_PLAN.md §1: single accent (brand blue), one big
- * tabular hero number, gray surface tints over borders, color only on band
- * badges / bar fills, one primary CTA. Reuses CoverageBar / Badge / ScoreDoughnut.
- *
- * Data is a hand-authored SAMPLE over the 6 user-facing 보장 types (OD-11).
- * Real screens will read the cached `riskfit.analysis`.
+ * Data is a hand-authored sample over the 6 user-facing 보장 types; the real
+ * screen reads the cached `riskfit.analysis` instead.
  */
 
 import { motion } from "motion/react";

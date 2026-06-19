@@ -1,19 +1,16 @@
 /* eslint-disable react-refresh/only-export-components --
-   Metadata/icon-data module (labels, walk order, flat inline-SVG icons, helpers),
-   not a hot-reloaded screen component — fast-refresh export purity doesn't apply. */
+   Data module (labels, walk order, inline-SVG icons, helpers), not a screen
+   component, so fast-refresh export purity doesn't apply. */
 /**
- * `areaMeta.tsx` — shared presentation metadata for the 5 risk drill-down areas
- * (생활습관 / 건강 / 가족력 / 직업 / 재무). Keeps labels, route slugs, the frozen
- * prev/next walk order, flat token-tinted inline icons, and the band→colour
- * mapping in one place so p17 (overview tiles) and p18–p22 (area detail) stay
- * consistent.
+ * Shared presentation metadata for the 5 risk drill-down areas (생활습관 / 건강 /
+ * 가족력 / 직업 / 재무): labels, route slugs, the frozen prev/next walk order,
+ * flat inline icons, and the band-to-colour mapping. Keeping it in one place
+ * lets the overview tiles and the area-detail screens stay consistent.
  *
- * Lane D owns `components/result/*`. Flat inline SVG only (no external assets),
- * single-accent discipline — colour comes from the risk band, not the icon.
+ * Colour comes from the risk band, not the icon (single-accent discipline).
  *
- * Frozen drill-down order (MIGRATION_PLAN OD-1):
- *   17 overview → 18 lifestyle → 19 health → 20 family → 21 job → 22 financial
- *   → 26 report   (linear 이전/다음; 다음 from financial → /report)
+ * The drill-down order is frozen and linear (이전/다음):
+ *   overview -> lifestyle -> health -> family -> job -> financial -> /report.
  */
 
 import type { ReactNode } from "react";
@@ -183,7 +180,7 @@ export function nextAreaPath(area: AreaId): string {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Band → colour / label                                              */
+/*  Band -> colour / label                                             */
 /* ------------------------------------------------------------------ */
 
 /** Risk band from a 0–100 area score (mirrors scoringRules.bands.risk). */

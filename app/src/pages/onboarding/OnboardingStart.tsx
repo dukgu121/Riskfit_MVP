@@ -5,8 +5,8 @@
  * 단일 CTA "시작하기" → /onboarding/info.
  *
  * 토스 톤(데스크톱 WEB): AppShell 안의 좁은 단일 컬럼(maxWidth≈640), 큰 헤드라인
- * 하나, 단일 브랜드 액센트, 면책 한 줄. 아무것도 저장하지 않는다(온보딩 1단계).
- * setOnboardingSeen()으로 "본 적 있음"만 기록(재방문 스킵 후크용, OD-4).
+ * 하나, 단일 브랜드 액센트, 면책 한 줄. 입력은 저장하지 않고, setOnboardingSeen()으로
+ * "본 적 있음" 플래그만 기록한다(재방문 스킵 후크용).
  */
 
 import { useEffect } from "react";

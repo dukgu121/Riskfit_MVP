@@ -1,24 +1,20 @@
 /**
- * RiskFit router configuration (full migration route map — MIGRATION_PLAN §2).
+ * RiskFit route map.
  *
- * Architecture
  *   - A single top-level `<AppLayout/>` route hosts the desktop-only gate,
  *     page-transition animations and the always-visible footer.
- *   - Page components are loaded via React Router 7's `lazy` field so the
- *     initial bundle stays lean.
+ *   - Pages load via the `lazy` field so the initial bundle stays lean.
  *   - `/login` is the only public route. `/onboarding/*` requires auth only
- *     (consent is CAPTURED on onboarding-3). Everything from `/input/basic`
- *     onward requires auth + consent; the Premium loop additionally requires
- *     the (demo) premium flag.
- *   - `/` redirects to `/onboarding` (the retired Landing is no longer routed).
- *   - The ungated `/proto` surface lets the whole migration be reviewed without
- *     login: `/proto/:slug` seeds sample data and renders the REAL page.
+ *     (consent is captured on the last onboarding step). Everything from
+ *     `/input/basic` onward requires auth + consent; the Premium loop also
+ *     requires the (demo) premium flag.
+ *   - `/` redirects to `/onboarding` (the old Landing is no longer routed).
+ *   - The ungated `/proto` surface lets the whole app be reviewed without
+ *     logging in: `/proto/:slug` seeds sample data and renders the real page.
  *   - Unknown paths fall through a `*` route to the same `<NotFound/>` UI.
  *
- * Note on lazy + named exports
- *   Our page modules export `InputBasic`, `ResultSummary`, … (named exports),
- *   so we adapt each dynamic import to the `{ Component }` shape that React
- *   Router expects from a `lazy` factory.
+ * Page modules use named exports (`InputBasic`, `ResultSummary`, …), so each
+ * dynamic import is adapted to the `{ Component }` shape `lazy` expects.
  */
 
 import type { ComponentType } from "react";
@@ -31,12 +27,8 @@ import { ConsentGate } from "./components/layout/ConsentGate";
 import { PremiumGate } from "./components/layout/PremiumGate";
 import { NotFound } from "./pages/NotFound";
 
-/**
- * Module shape: a dynamic import whose named export `K` is a React component.
- * We deliberately keep the prop type opaque (`AnyPage = ComponentType<…>`)
- * here because each page module owns its own prop contract — the router
- * never passes additional props, it just renders `<Page />`.
- */
+// The router never passes props — it just renders `<Page />` — so the prop
+// type is intentionally opaque; each page module owns its own contract.
 type AnyPage = ComponentType<Record<string, never>>;
 type LazyPageModule<K extends string> = Record<K, AnyPage>;
 
@@ -72,10 +64,9 @@ function authedLazy<K extends string>(
 }
 
 /**
- * Wrap a `lazy` factory in `<AuthGate>` + `<ConsentGate>` while preserving
- * code-splitting. Login is required first; consent is the second gate. A
- * logged-out user bounces to `/login`, a logged-in-but-unconsented user to
- * `/onboarding`.
+ * Wrap a `lazy` factory in `<AuthGate>` + `<ConsentGate>`. Login is the first
+ * gate, consent the second: a logged-out user bounces to `/login`, a
+ * logged-in-but-unconsented user to `/onboarding`.
  */
 function gatedLazy<K extends string>(
   loader: () => Promise<LazyPageModule<K>>,
@@ -100,8 +91,8 @@ function gatedLazy<K extends string>(
 
 /**
  * Wrap a `lazy` factory in `<AuthGate>` + `<ConsentGate>` + `<PremiumGate>`.
- * The Premium loop (p28–p29) sits behind the demo paywall; a non-subscriber
- * bounces to `/premium`.
+ * The Premium loop sits behind the demo paywall; a non-subscriber bounces to
+ * `/premium`.
  */
 function premiumGatedLazy<K extends string>(
   loader: () => Promise<LazyPageModule<K>>,
@@ -272,15 +263,15 @@ const routes: RouteObject[] = [
         ),
       },
 
-      /* ---------------- PROTOTYPE preview (ungated) ----------------
-       * Lets the whole desktop-web migration (all 29 screens) be reviewed
-       * without logging in or walking the wizard. Remove before ship. */
+      /* ---------------- Prototype preview (ungated) ----------------
+       * Lets the whole app be reviewed without logging in or walking the
+       * wizard. Remove before ship. */
       {
         path: "/proto",
         lazy: lazyNamed(() => import("./pages/proto/ProtoHub"), "ProtoHub"),
       },
       {
-        // Legacy direct link to the hand-authored gold reference.
+        // Legacy direct link to the hand-authored reference summary.
         path: "/proto/result",
         lazy: lazyNamed(
           () => import("./pages/proto/ProtoResultSummary"),

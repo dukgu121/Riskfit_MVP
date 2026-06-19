@@ -75,14 +75,14 @@ for (const p of [BASELINE, ELEVATED]) {
     const engine = area === "health" ? healthRisk(p) : lifestyleRisk(p);
     const ok = engine === Math.min(realSum, 100);
     parityOk &&= ok;
-    line(`${tag}/${area}`, `breakdown합=${realSum}  엔진=${engine}  ${ok ? "✓" : "✗ MISMATCH"}`);
+    line(`${tag}/${area}`, `breakdown합=${realSum}  엔진=${engine}  ${ok ? "OK" : "MISMATCH"}`);
   }
 }
 
 const moved = elev.total > base.total && elev.health > base.health && elev.lifestyle > base.lifestyle;
 console.log("\n" + "=".repeat(60));
-console.log(`결과: 새 필드 점수 반영 = ${moved ? "✅ 동작함" : "❌ 점수 안 움직임"}`);
-console.log(`      패리티(상세=엔진) = ${parityOk ? "✅ 일치" : "❌ 불일치"}`);
+console.log(`결과: 새 필드 점수 반영 = ${moved ? "동작함" : "FAIL 점수 안 움직임"}`);
+console.log(`      패리티(상세=엔진) = ${parityOk ? "일치" : "FAIL 불일치"}`);
 console.log("=".repeat(60));
 
 if (!moved || !parityOk) process.exit(1);

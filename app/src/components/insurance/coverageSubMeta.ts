@@ -1,23 +1,17 @@
 /**
- * `coverageSubMeta` — the brain shared by the 보험 hub (p8) and the 보험 세부
- * sub-screen chain (p9–p14).
+ * Shared meta for the 보험 hub and the 보험 세부 sub-screen chain, covering the
+ * 6 user-facing 보장 types the input flow collects. It holds what the UI needs
+ * but `lib/insuranceForm.ts` + `calc/coverageFit.ts` don't already give us:
  *
- * It defines, for each of the **6 user-facing 보장 types** the input flow
- * collects (OD-11), everything the UI needs that the existing
- * `lib/insuranceForm.ts` + `calc/coverageFit.ts` don't already express in one
- * place:
- *
- *   - the hyphen ⇄ underscore slug map (`actual-medical` ⇄ `actual_medical`),
- *   - the chain order (so the sub-screen knows "보험 3/6" + the next slug),
+ *   - the hyphen/underscore slug map (`actual-medical` <-> `actual_medical`),
+ *   - the chain order (so a sub-screen knows "보험 3/6" + the next slug),
  *   - the recommended 권장값 for the active user-type (read from
  *     `standardCoverages.json`, never hardcoded),
- *   - a tiny `verdict(form, joined)` → one live 적합도 line, derived from the
- *     SAME ratio math the canonical engine uses (presence types compare on
- *     가입 여부; ratio types compare summed amount vs 권장).
+ *   - a live 적합도 verdict line, derived from the SAME ratio math the canonical
+ *     engine uses (presence types compare on 가입 여부; ratio types compare the
+ *     summed amount vs 권장) so the live line never disagrees with the cache.
  *
- * Pure data/logic — no React — so both the page and the hub import it cheaply
- * and the typecheck exercises it. Persistence + the form widgets live in the
- * components; this only computes/maps.
+ * Pure data/logic — no React — so both the page and the hub import it cheaply.
  */
 
 import {
@@ -41,7 +35,7 @@ import type {
 } from "../../types";
 
 /* ------------------------------------------------------------------ */
-/*  The 6 user-facing types, in chain order (OD-11)                    */
+/*  The 6 user-facing types, in chain order                            */
 /* ------------------------------------------------------------------ */
 
 /** Chain order for the 보험 세부 walk (matches the hub row order). */
@@ -55,7 +49,7 @@ export const INSURANCE_CHAIN: readonly CoverageTypeId[] = [
 ] as const;
 
 /* ------------------------------------------------------------------ */
-/*  slug ⇄ CoverageTypeId                                              */
+/*  slug <-> CoverageTypeId                                            */
 /* ------------------------------------------------------------------ */
 
 /** Route slug (hyphen) for each chain type. */
@@ -91,7 +85,7 @@ export function chainIndex(id: CoverageTypeId): number {
   return INSURANCE_CHAIN.indexOf(id) + 1;
 }
 
-/** The next chain slug after `id`, or `null` at the end (→ back to hub). */
+/** The next chain slug after `id`, or `null` at the end (back to the hub). */
 export function nextSlug(id: CoverageTypeId): string | null {
   const idx = INSURANCE_CHAIN.indexOf(id);
   if (idx === -1 || idx === INSURANCE_CHAIN.length - 1) return null;
@@ -106,7 +100,7 @@ const standardCoverages = standardCoveragesData as StandardCoverage[];
 
 /** Whether this type is scored on 가입 여부 (presence) vs amount ratio. */
 export function isPresenceType(id: CoverageTypeId): boolean {
-  // p13 수술 is a money input in the UI but scored on presence
+  // 수술 is a money input in the UI but scored on presence
   // (standardCoverages.fitMode === "presence"). Drive the verdict off the
   // canonical fitMode so the live line never disagrees with the cached result.
   return standardOf(id).fitMode === "presence";
@@ -232,7 +226,7 @@ const BAND_LABEL: Record<CoverageBandId, string> = {
  * @param joined   가입함(true)/미가입(false) from the SegmentedControl
  * @param formValue the AmountInput value in *display* units (만원 / 원/일·월), or
  *                  null. Presence types ignore this.
- * @param profile  active profile (selects the user-type → 권장값)
+ * @param profile  active profile (selects the user-type, hence 권장값)
  */
 export function liveVerdict(
   id: CoverageTypeId,
@@ -261,7 +255,7 @@ export function liveVerdict(
     };
   }
 
-  // Ratio types: compare the entered amount (→ 원) to 권장값.
+  // Ratio types: compare the entered amount (in 원) to 권장값.
   const stored = toStoredAmount(id, formValue);
   const std = recommendedAmount(id, userType);
 
@@ -364,7 +358,7 @@ export function hubRowState(
     return { ...base, status: "declined", summary: "미가입", band: null, bandLabel: null };
   }
 
-  // Joined → build the verdict from the summed amount.
+  // Joined: build the verdict from the summed amount.
   if (meta.presence) {
     return {
       ...base,

@@ -1,13 +1,11 @@
 /**
- * p17 「상세 리스크 분석」 — the risk drill-down OVERVIEW.
+ * p17 「상세 리스크 분석」 — the risk drill-down overview.
  *
  * HERO = 위험점수 RISK (`analysis.riskScore.total`, higher = WORSE) in the
- * open-arc `ScoreGauge` — visually distinct from the p16 FIT doughnut so the
- * polarity reads at a glance (MIGRATION_PLAN §9). Below: a 2-row 5-tile grid
- * (생활습관/건강/가족력/직업/재무) → each area's detail screen, plus the signed
- * +N weighted-contribution bars (the block the PDF crammed onto p16, moved here
- * per the Toss simplification). All contributions read `+N` — band/colour shows
- * good vs bad, never the sign.
+ * open-arc `ScoreGauge` — deliberately distinct from the p16 FIT doughnut so the
+ * polarity reads at a glance. Below: a 5-tile grid (생활습관/건강/가족력/직업/재무)
+ * linking to each area's detail screen, plus the signed +N weighted-contribution
+ * bars. All contributions read `+N` — band/colour shows good vs bad, never the sign.
  *
  * Reads the cache READ-ONLY; the per-area weighted deltas are `areaScore ×
  * weight` (no recompute). Footer: 이전 → /result, 다음 → 첫 영역(생활습관).

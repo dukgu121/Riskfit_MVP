@@ -31,7 +31,7 @@ export const durations = {
   fast: 0.16,
   base: 0.22,
   slow: 0.32,
-  // Capped at 400ms per Toss guide §6: "400ms 초과 모션은 없다 — 답답함 유발".
+  // Capped at 400ms: longer motions start to feel sluggish.
   slower: 0.4,
 } as const;
 
@@ -69,7 +69,7 @@ export const fadeInVariants: Variants = {
   visible: { opacity: 1 },
 };
 
-/** Translate up + fade. Toss uses this for card entries / list rows. */
+/** Translate up + fade. Used for card entries and list rows. */
 export const slideUpVariants: Variants = {
   hidden: { opacity: 0, y: 12 },
   visible: { opacity: 1, y: 0 },

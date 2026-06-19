@@ -4,14 +4,14 @@
  *
  * Layout per area: a hero gauge + band (the area's own 0–100 RISK score), a
  * ranked 기여 list (factor + `+N` + `RiskContributionBar`), one deterministic
- * AI 코멘트 (`areaComments.ts`, NOT an LLM), and a 점수 구성 strip behind a
- * toggle. Footer walks the FROZEN order (MIGRATION_PLAN OD-1):
+ * AI 코멘트 (`areaComments.ts`, not an LLM), and a 점수 구성 strip behind a
+ * toggle. The footer walks a fixed order:
  *   17 → 18 lifestyle → 19 health → 20 family → 21 job → 22 financial → 26 report
  *
- * Real vs demo-mock factors (MIGRATION_PLAN §3): lifestyle = all real; health =
- * BMI/검진/진료/가족력 real + 혈압/혈당/콜레스테롤 추정; family = per-condition
- * 추정; job = 추정 sub-split summing to jobRisk; financial = 저축/부채/보험 real
- * + 소득안정성/재무목표 추정. Demo rows carry a "추정" tag.
+ * Real vs demo-mock factors: lifestyle = all real; health = BMI/검진/진료/가족력
+ * real + 혈압/혈당/콜레스테롤 추정; family = per-condition 추정; job = 추정
+ * sub-split summing to jobRisk; financial = 저축/부채/보험 real + 소득안정성/재무목표
+ * 추정. Demo rows carry a "추정" tag.
  *
  * Reads the cache READ-ONLY (per-area score) + the profile (factor breakdown via
  * `riskContributions.ts`). Invalid `:area` redirects to /result/detail.

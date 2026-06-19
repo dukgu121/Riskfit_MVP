@@ -1,15 +1,10 @@
 /**
- * Web-native wizard chrome for the 보험 hub + 보험 세부 chain (lane C).
- *
- * The shared `components/wizard/StepHeader`/`StepFooter` are tuned for the old
- * phone-mockup (a 480px column with a `fixed` bottom CTA and negative side
- * margins). Inside `AppShell` — a centred desktop container — those don't fit,
- * so this module provides two small, AppShell-native pieces that match the
- * gold-reference Toss tone:
+ * Web-native wizard chrome for the 보험 hub + 보험 세부 chain. Two small pieces
+ * sized for the centred `AppShell` container:
  *
  *   - `WizardStepHeader` — an eyebrow ("입력 5/5" or "보험 3 / 6") + a thin
- *     brand progress bar, sitting at the top of the content column.
- *   - `WizardFooter` — an in-flow action row (NOT fixed): an optional ghost
+ *     brand progress bar at the top of the content column.
+ *   - `WizardFooter` — an in-flow action row (not fixed): an optional ghost
  *     secondary on the left and a primary CTA on the right, full-width on
  *     mobile. Used for 임시저장 / 저장하고 다음으로.
  *
@@ -55,8 +50,8 @@ export function WizardStepHeader({
           </span>
         )}
       </div>
-      {/* Same shared <Progress> primitive the p4–p7 input wizard uses, so the
-          보험 chain's step bar is visually identical (height / fill / easing). */}
+      {/* Same shared <Progress> primitive the input wizard uses, so the 보험
+          chain's step bar is visually identical (height / fill / easing). */}
       <Progress
         value={clamped}
         className="mt-2.5 h-1.5"

@@ -1,11 +1,9 @@
 /**
- * `AppShell` — the RiskFit WEB layout shell.
- *
- * Direction (PO, 2026-06-14): RiskFit is a desktop WEB app, NOT a phone
- * mockup. Every screen sits inside this shell: a sticky top header with the
- * wordmark + optional title/back/right-action, and a centred max-width
- * content container that uses horizontal space rather than a narrow mobile
- * column. Toss-minimal: white header on a neutral-50 page, single brand accent.
+ * `AppShell` — the RiskFit web layout shell. RiskFit is a desktop web app, so
+ * every screen sits inside this shell: a sticky top header with the wordmark +
+ * optional title/back/right-action, and a centred max-width content container
+ * that uses horizontal space rather than a narrow mobile column. White header on
+ * a neutral-50 page, single brand accent.
  */
 
 import type { ReactNode } from "react";
@@ -18,12 +16,11 @@ export interface AppShellProps {
   title?: string;
   /** Optional right-aligned header action. */
   headerAction?: ReactNode;
-  /** Optional back affordance: a target path renders a ← link. */
+  /** Optional back affordance: a target path renders a back chevron link. */
   backTo?: string;
   /** Content max width in px (default 1080). Wizards can pass a tighter value. */
   maxWidth?: number;
-  /** Where the wordmark links (default "/onboarding" — the in-flow home;
-   *  /proto preview screens pass brandTo="/proto" explicitly). */
+  /** Where the wordmark links (default "/onboarding", the in-flow home). */
   brandTo?: string;
   children: ReactNode;
 }

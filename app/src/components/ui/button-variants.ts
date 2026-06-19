@@ -8,8 +8,8 @@ import { cva } from "class-variance-authority";
  *   broad catch-all) and tuned to 160ms ease-out-expo. Toss's signature
  *   springy feel comes from this exact pair: a short duration with a
  *   long-tailed ease.
- * - Active state uses `scale-[0.98]` because Toss accepts a tiny scale dip on
- *   press because finger pressure should produce *some* visual feedback.
+ * - Active state uses a tiny `scale-[0.98]` dip on press so finger pressure
+ *   produces some visual feedback.
  * - Disabled state shifts to neutral chrome (neutral-200 bg, neutral-400
  *   text) rather than opacity-50. Opacity-50 over coloured surfaces
  *   produces washed-out artefacts that read as a render bug.

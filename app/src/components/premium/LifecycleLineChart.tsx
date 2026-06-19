@@ -1,11 +1,11 @@
 /**
  * `LifecycleLineChart` — a single brand-line area chart of projected RISK over a
- * lifecycle (p28) or a 5-year horizon (p29). chart.js `Line` via react-chartjs-2.
+ * lifecycle or a 5-year horizon, via react-chartjs-2's `Line`.
  *
- * Toss-restrained: ONE brand-blue line on a faint brand fill, no gridlines except
- * a hairline baseline, rounded points, soft tension. The y-axis is the projected
- * 위험점수 (0–100, higher = worse); the x-axis is age. All numbers are DEMO
- * ESTIMATES (the caller renders the "예측 추정치" caption + disclaimer).
+ * One brand-blue line on a faint brand fill, no gridlines except a hairline
+ * baseline, rounded points, soft tension. The y-axis is the projected 위험점수
+ * (0–100, higher = worse); the x-axis is age. All numbers are DEMO ESTIMATES
+ * (the caller renders the "예측 추정치" caption + disclaimer).
  *
  * chart.js paints to canvas and cannot read CSS variables, so we resolve the
  * brand token at call time (same approach as `ScoreDoughnut`).

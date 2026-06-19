@@ -5,7 +5,6 @@
  * 한 번 받는다. CTA "시작하기"는 동의 전 비활성. 동의 + CTA → setConsent(true)
  * 후 /input/basic 으로 이동(ConsentGate 통과).
  *
- * 동의 로직은 기존 Landing.tsx의 ConsentCard를 그대로 차용 — useConsent().setConsent.
  * 토스 톤(데스크톱 WEB): AppShell 좁은 컬럼(640), 결과 미리보기 리스트 + 강조되는
  * 동의 카드 + 단일 브랜드 CTA + 면책 한 줄.
  */
@@ -122,7 +121,7 @@ export function OnboardingResultIntro() {
           ))}
         </ul>
 
-        {/* Consent card (ported from Landing.tsx ConsentCard) */}
+        {/* Consent card */}
         <label
           htmlFor="riskfit-consent"
           className={cn(

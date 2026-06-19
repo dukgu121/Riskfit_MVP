@@ -1,11 +1,11 @@
 /**
  * Route guard that requires the (demo) Premium subscription flag.
  *
- * The Premium loop (p27–p29) is a sanctioned demo paywall: tapping 구독하기 on
- * `/premium` flips `riskfit.premium` via `setPremium(true)`. The lifecycle /
- * premium-report screens then unlock. A user who deep-links straight to a
- * Premium route without subscribing bounces to `/premium` (the paywall), so
- * the gate mirrors `AuthGate` / `ConsentGate` in shape.
+ * The Premium loop is a sanctioned demo paywall: tapping 구독하기 on `/premium`
+ * flips `riskfit.premium` via `setPremium(true)`, unlocking the lifecycle /
+ * premium-report screens. A user who deep-links into a Premium route without
+ * subscribing bounces to `/premium`, so this gate mirrors `AuthGate` /
+ * `ConsentGate` in shape.
  *
  * @example
  *   <PremiumGate>

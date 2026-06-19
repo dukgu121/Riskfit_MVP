@@ -123,7 +123,7 @@ const FORBIDDEN_PATTERNS: ReadonlyArray<readonly [RegExp, string]> = [
   [/함께해요[.!~\s]*/g, ''],
   [/함께 시작해요[.!~\s]*/g, ''],
   [/함께 시작해 봐요[.!~\s]*/g, ''],
-  // Personification variants — "안내해 드릴게요" style (P2-4)
+  // Personification variants — "안내해 드릴게요" style
   [/안내해 드릴게요[.!~\s]*/g, ''],
   [/안내해드릴게요[.!~\s]*/g, ''],
   [/알려 드릴게요[.!~\s]*/g, ''],
@@ -133,15 +133,15 @@ const FORBIDDEN_PATTERNS: ReadonlyArray<readonly [RegExp, string]> = [
   [/정리해 드릴게요[.!~\s]*/g, ''],
   [/정리해드릴게요[.!~\s]*/g, ''],
   [/말씀드릴게요[.!~\s]*/g, ''],
-  // Encouragement (P2-4)
+  // Encouragement
   [/힘내요[.!~\s]*/g, ''],
   [/힘내세요[.!~\s]*/g, ''],
   [/파이팅[!.,~\s]*/g, ''],
   [/화이팅[!.,~\s]*/g, ''],
   [/잘하고 있어요[.!~\s]*/g, ''],
   [/잘하고 계세요[.!~\s]*/g, ''],
-  // Absolute promises (P2-4) — strip the whole sentence so the
-  // resulting prose doesn't make a guarantee we can't keep.
+  // Absolute promises — strip the whole sentence so the resulting
+  // prose doesn't make a guarantee we can't keep.
   [/반드시[^.!?]*[.!?]/g, ''],
   [/꼭[^.!?]*[.!?]/g, ''],
   [/절대[^.!?]*[.!?]/g, ''],
@@ -158,7 +158,7 @@ const FORBIDDEN_PATTERNS: ReadonlyArray<readonly [RegExp, string]> = [
   [/혁신적인 /g, ''],
   [/탁월한 /g, ''],
   [/완벽한 /g, ''],
-  // Marketing adjectives (P2-4)
+  // Marketing adjectives
   [/효과적인\s*/g, ''],
   [/체계적인\s*/g, ''],
   [/강력한\s*/g, ''],

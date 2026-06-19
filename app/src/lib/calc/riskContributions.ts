@@ -1,33 +1,26 @@
 /**
- * `lib/calc/riskContributions.ts` — PURE re-exposure of the per-factor
- * contributions the existing `*Risk()` functions compute internally but throw
- * away (verified: `healthRisk` / `lifestyleRisk` / `jobRisk` / `financialRisk`
- * return only a single capped total). The PDF drill-down screens (p18–p22) need
- * the breakdown, so we reproduce the exact same `scoringRules.json` lookups
- * here.
+ * Per-factor risk contributions. The `*Risk()` functions compute these internally
+ * but return only a single capped total; the drill-down screens need the
+ * breakdown, so we reproduce the same `scoringRules.json` lookups here.
  *
- * ── PARITY CONTRACT (do not break) ───────────────────────────────────────────
- *   For every area, the SUM of the `real` factor deltas returned here must equal
- *   the un-capped pre-clamp total the matching `*Risk()` function produces from
- *   the same lookups. (The engine then applies `Math.min(total, cap)` +
- *   `clampScore`; the area gauge uses the engine's clamped value as `score`, so
- *   a capped-out area reads its true ≤100 hero while the factor list still shows
- *   the additive breakdown.) `demoMock` factors are NOT part of that sum — they
- *   are display-only estimates for PDF fidelity (job sub-splits, income
- *   stability, financial goal, per-disease 가족력), tagged "추정" in the UI.
- *   NOTE: 만성질환·혈압·혈당·콜레스테롤·식습관 are now REAL weighted engine factors.
+ * PARITY CONTRACT (do not break): for every area, the SUM of the `real` factor
+ * deltas returned here must equal the un-capped pre-clamp total the matching
+ * `*Risk()` function produces from the same lookups. The engine then applies
+ * `Math.min(total, cap)` + `clampScore`; the area gauge uses the engine's clamped
+ * value as `score`, so a capped-out area reads its true ≤100 hero while the factor
+ * list still shows the additive breakdown. `demoMock` factors are NOT part of that
+ * sum — they are display-only estimates (job sub-splits, income stability,
+ * financial goal, per-disease 가족력), tagged "추정" in the UI. 만성질환·혈압·혈당·
+ * 콜레스테롤·식습관 are real weighted engine factors.
  *
- * All deltas are `+N` (every `scoringRules` value ≥ 0) → good factors read LOW,
+ * All deltas are `+N` (every `scoringRules` value ≥ 0) → good factors read low,
  * never negative; the band/colour conveys good vs bad, not the sign.
  *
- * 가족력 is a STANDALONE display area here (OD-3): the weighted total does NOT
- * gain a 5th area — family history is folded into `healthRisk` — so this module
- * exposes a demo-derived 가족력 score purely for the p20 screen and does not
- * change any headline number.
+ * 가족력 is a standalone display area here: the weighted total does NOT gain a 5th
+ * area — family history is folded into `healthRisk` — so this module exposes a
+ * demo-derived 가족력 score purely for that screen and changes no headline number.
  *
- * No React, no JSX — trivially importable + exercised by the typecheck. Import
- * DIRECTLY (`../calc/riskContributions`), NOT via the `lib/calc/index.ts` barrel
- * (Agent A owns the barrel).
+ * Import this module directly, not via the `lib/calc/index.ts` barrel.
  */
 
 import scoringRules from "../../data/scoringRules.json";
@@ -35,6 +28,7 @@ import type {
   ChronicCondition,
   DietHabit,
   FamilyHistoryCondition,
+  Insurance,
   JobGroupId,
   UserProfileInput,
   VitalBand,
@@ -42,11 +36,6 @@ import type {
 import { normalizeProfile, nonNegativeNumber } from "./defaults";
 import { calculateBmi, scoreChronicConditions, scoreVital } from "./healthRisk";
 import { totalMonthlyPremium } from "./financialRisk";
-import type { Insurance } from "../../types";
-
-/* ------------------------------------------------------------------ */
-/*  Shared shapes                                                      */
-/* ------------------------------------------------------------------ */
 
 export type AreaId = "lifestyle" | "health" | "family" | "job" | "financial";
 
@@ -70,10 +59,7 @@ export interface RiskContribution {
 
 const r = scoringRules;
 
-/* ------------------------------------------------------------------ */
-/*  Threshold helper (mirrors financialRisk.scoreThreshold)            */
-/* ------------------------------------------------------------------ */
-
+// Threshold + BMI helpers, mirroring financialRisk.scoreThreshold / scoreBmi.
 type ThresholdRule = {
   minInclusive?: number;
   maxExclusive?: number;
@@ -110,9 +96,7 @@ function scoreBmiLocal(bmi: number): number {
   return rule?.score ?? 10;
 }
 
-/* ------------------------------------------------------------------ */
-/*  생활습관 (p18) — ALL real (lifestyleRisk per-factor)               */
-/* ------------------------------------------------------------------ */
+// 생활습관 — all real (lifestyleRisk per-factor).
 
 const SMOKING_DETAIL: Record<string, string> = {
   no: "비흡연",
@@ -207,9 +191,7 @@ export function lifestyleContributions(
   ];
 }
 
-/* ------------------------------------------------------------------ */
-/*  건강 (p19) — BMI/검진/진료/가족력/만성질환/혈압/혈당/콜레스테롤 모두 real */
-/* ------------------------------------------------------------------ */
+// 건강 — BMI/검진/진료/가족력/만성질환/혈압/혈당/콜레스테롤, all real.
 
 const HOSPITAL_DETAIL: Record<string, string> = {
   visits_1_2: "연 1~2회",
@@ -306,8 +288,8 @@ export function healthContributions(
       kind: "real",
       detail: chronicDetail(p.chronicConditions),
     },
-    // Vitals are now part of the weighted health total (real, parity-counted),
-    // scored via the same scoringRules.health.vital the engine uses.
+    // Vitals are real, parity-counted factors, scored via the same
+    // scoringRules.health.vital the engine uses.
     {
       id: "bloodPressure",
       label: "혈압",
@@ -334,9 +316,7 @@ export function healthContributions(
   return real;
 }
 
-/* ------------------------------------------------------------------ */
-/*  가족력 (p20) — STANDALONE demo area (OD-3, not a weighted total)   */
-/* ------------------------------------------------------------------ */
+// 가족력 — standalone demo area, not part of the weighted total.
 
 const FAMILY_CONDITION_LABEL: Record<FamilyHistoryCondition, string> = {
   cancer: "암",
@@ -377,9 +357,9 @@ export function familyContributions(
 }
 
 /**
- * Demo-derived standalone 가족력 score (0–100) for the p20 hero gauge ONLY.
+ * Demo-derived standalone 가족력 score (0–100) for the family hero gauge only.
  * Maps the engine's family-history-count bands to a presentable 0–100 score so
- * the gauge reads sensibly, without touching any weighted total (OD-3).
+ * the gauge reads sensibly, without touching any weighted total.
  */
 export function familyAreaScore(input: UserProfileInput = {}): number {
   const count = (input.familyHistory ?? normalizeProfile(input).familyHistory)
@@ -390,16 +370,13 @@ export function familyAreaScore(input: UserProfileInput = {}): number {
   return 80;
 }
 
-/* ------------------------------------------------------------------ */
-/*  직업 (p21) — demo-mock sub-factors that SUM to jobRisk(group)      */
-/* ------------------------------------------------------------------ */
+// 직업 — demo-mock sub-factors that sum to jobRisk(group).
 
 /**
- * Five PDF sub-factors as fixed FRACTIONS of the job-group score. The fractions
- * sum to 1.0, so the rounded parts sum back to the engine's `jobRisk` (the last
- * part absorbs any rounding remainder) — preserving the "추정 합 = jobRisk"
- * invariant. The split itself is demo-mock (`data/jobFactorWeights.json` was
- * not added; the weights live here as a frozen constant).
+ * Five sub-factors as fixed fractions of the job-group score. The fractions sum
+ * to 1.0, so the rounded parts sum back to the engine's `jobRisk` (the last part
+ * absorbs any rounding remainder), preserving the "추정 합 = jobRisk" invariant.
+ * The split itself is demo-mock; the weights live here as a frozen constant.
  */
 const JOB_FACTOR_WEIGHTS: { id: string; label: string; weight: number }[] = [
   { id: "physicalLoad", label: "신체 부담", weight: 0.3 },
@@ -443,9 +420,7 @@ export function jobContributions(
   });
 }
 
-/* ------------------------------------------------------------------ */
-/*  재무 (p22) — 저축/부채/보험보장 real; 소득안정성/재무목표 mock       */
-/* ------------------------------------------------------------------ */
+// 재무 — 저축/부채/보험보장 real; 소득안정성/재무목표 demo-mock.
 
 export function financialContributions(
   input: UserProfileInput = {},
@@ -468,9 +443,8 @@ export function financialContributions(
     emergencyMonths,
     r.finance.emergencyFundMonths as ThresholdRule[],
   );
-  // ⚠ Audit correction: 부채 ≈ fixedExpenseRatio is REAL (not mock); it
-  // additionally folds the real hasDependents term so the real parts sum to
-  // financialRisk's pre-cap total.
+  // 부채 ≈ fixedExpenseRatio is real (not mock), and folds in the real
+  // hasDependents term so the real parts sum to financialRisk's pre-cap total.
   const debtDelta =
     scoreThreshold(
       fixedExpenseRatio,
@@ -549,10 +523,6 @@ function jobToIncomeStabilityDelta(jobGroup: JobGroupId): number {
       return 5;
   }
 }
-
-/* ------------------------------------------------------------------ */
-/*  Dispatch + helpers                                                 */
-/* ------------------------------------------------------------------ */
 
 /** Resolve the contribution list for any area. */
 export function contributionsForArea(

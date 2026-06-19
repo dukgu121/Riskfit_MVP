@@ -65,7 +65,7 @@ export const reportSummarySchema = z
     expectedOutOfPocket: z.number().min(0).max(1_000_000_000),
     expectedOutOfPocketText: z.string().max(50),
     completeness: z.number().min(0).max(100),
-    // Report-AI edge fields (Phase 1). MUST mirror types/index.ts:ReportSummary.
+    // Report-AI edge fields. MUST mirror types/index.ts:ReportSummary.
     topRiskFactors: z
       .array(
         z

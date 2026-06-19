@@ -64,7 +64,7 @@ export function ScoreGauge({
   const circumference = 2 * Math.PI * radius;
   const arcLen = circumference * ARC_FRACTION;
   // An SVG <circle> starts its stroke at 3 o'clock (angle 0) and dasharray
-  // draws clockwise. A 270° arc therefore spans 3→12 o'clock, leaving the gap
+  // draws clockwise. A 270° arc therefore spans 3 to 12 o'clock, leaving the gap
   // in the top-right quadrant. Rotating the whole SVG by 135° re-centers that
   // gap at the bottom (6 o'clock) so the gauge reads as an open speedometer.
   const rotation = 135;

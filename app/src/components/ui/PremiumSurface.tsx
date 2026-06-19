@@ -1,9 +1,8 @@
 /**
- * `PremiumSurface` — a calm premium-tinted card surface with a flat crown
- * glyph. Differentiates the Premium tier (p27–p29) WITHOUT the PDF's purple
- * gradient (OD-8): a soft `premium-50` wash + a `premium-500` crown. Primary
- * CTAs inside stay brand blue so single-accent action discipline holds — this
- * component only sets the surface, not the buttons.
+ * `PremiumSurface` — a calm premium-tinted card surface with a flat crown glyph:
+ * a soft `premium-50` wash + a `premium-500` crown, no gradient. Primary CTAs
+ * inside stay brand blue (single-accent discipline) — this component only sets
+ * the surface, not the buttons.
  *
  * Use as a section wrapper for premium upsell / lifecycle framing. The crown is
  * optional and can be hidden for a plainer tinted panel.

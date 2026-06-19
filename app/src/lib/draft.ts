@@ -1,7 +1,5 @@
 /**
- * `lib/draft.ts` — the single analysis-cache + diagnosis-reset layer.
- *
- * MIGRATION_PLAN §5/§7 (FROZEN CONTRACT):
+ * The single analysis-cache + diagnosis-reset layer (frozen contract):
  *   - `/analyzing` calls `computeAndCacheAnalysis(profile, insurances)` ONCE
  *     and writes the result to `riskfit.analysis`.
  *   - Every result / improve / report / premium screen reads that cache
@@ -14,11 +12,10 @@
  *
  * Polarity (do not confuse):
  *   - `coverageFit.overall` = 보장 적합도 FIT (higher = better), scored over the
- *     6 user-facing coverage types only (OD-11).
+ *     6 user-facing coverage types only.
  *   - `riskScore.total` = 위험점수 RISK (higher = worse).
  *
- * This module is pure data plumbing — no React, no JSX — so it stays trivially
- * importable from any lane and is exercised by the build/typecheck.
+ * Pure data plumbing — no React, no JSX — so it imports cleanly from anywhere.
  */
 
 import {
@@ -40,15 +37,15 @@ import type {
 import { ANALYSIS_CACHE_VERSION } from "../types";
 
 /* ------------------------------------------------------------------ */
-/*  coverageFit 6-type restriction (OD-11)                            */
+/*  coverageFit 6-type restriction                                    */
 /* ------------------------------------------------------------------ */
 
 /**
  * The 6 user-facing 보장 types the input flow actually collects. The scoring
  * engine knows ~10 types, but the wizard only captures these — so the cached
- * `coverageFit.overall` + counts MUST be restricted to them, otherwise the
- * 72% hero + "공백 N개" story is mathematically unreachable (uncollectable
- * gaps would permanently drag the average down). FROZEN per MIGRATION_PLAN §4.
+ * `coverageFit.overall` + counts MUST be restricted to them. Otherwise the
+ * 적합도 hero + "공백 N개" story is mathematically unreachable: gaps the user
+ * can't even input would permanently drag the average down. Frozen contract.
  */
 export const USER_FACING_COVERAGE_TYPES: readonly CoverageTypeId[] = [
   "actual_medical",
@@ -114,8 +111,8 @@ export function writeAnalysis(cache: AnalysisCache): void {
 
 /**
  * Read the cached analysis, or `null` when missing / stale-shape / malformed.
- * Screens 16–29 use this; they must gracefully handle `null` (e.g. redirect to
- * `/analyzing` or show Agent A's seeded preview).
+ * Every result/improve/report/premium screen uses this and must handle `null`
+ * gracefully (e.g. redirect to `/analyzing`, or render the seeded preview).
  */
 export function readAnalysis(): AnalysisCache | null {
   const cached = read<AnalysisCache | null>(STORAGE_KEYS.analysis, null);
@@ -136,7 +133,7 @@ export function clearAnalysis(): void {
  * Compute the full analysis from a profile + insurances and write it to the
  * cache. The ONLY place `totalRiskScore` / `coverageFit` / `outOfPocket` are
  * called for the live flow. `coverageFit` is restricted to the 6 user-facing
- * types (OD-11) before caching.
+ * types before caching.
  */
 export function computeAndCacheAnalysis(
   profile: UserProfileInput,
@@ -177,7 +174,7 @@ export function setPremium(subscribed: boolean): void {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Onboarding-seen flag (OD-4)                                        */
+/*  Onboarding-seen flag                                               */
 /* ------------------------------------------------------------------ */
 
 /** Whether the user has already seen onboarding (skip on revisit). */
@@ -226,7 +223,7 @@ export function upsertInsurance(
 }
 
 /* ------------------------------------------------------------------ */
-/*  Diagnosis reset (RESET#1/#2/#3)                                    */
+/*  Diagnosis reset                                                    */
 /* ------------------------------------------------------------------ */
 
 /**
@@ -237,8 +234,8 @@ export function upsertInsurance(
  * checklist, the cached report, and the insurance draft-step pointer.
  *
  * KEEPS: consent (so the user doesn't re-accept) and premium (so a paid demo
- * survives re-diagnosis — OD-6). Onboarding-seen is also kept (no reason to
- * replay onboarding on a re-diagnose).
+ * survives re-diagnosis). Onboarding-seen is also kept — no reason to replay
+ * onboarding on a re-diagnose.
  */
 export function resetDiagnosis(): void {
   const keysToClear: string[] = [
@@ -259,9 +256,9 @@ export function resetDiagnosis(): void {
 
 /**
  * Preserve the `?return=` param as the user walks the input wizard, so the
- * Premium re-input loop (RESET#2/#3) lands back on /premium/lifecycle|report
- * (via /analyzing's `?return=` branch) instead of /result. Read from the live
- * URL at click time; returns "" when absent. Append to each forward navigate:
+ * Premium re-input loop lands back on /premium/lifecycle|report (via
+ * /analyzing's `?return=` branch) instead of /result. Read from the live URL
+ * at click time; returns "" when absent. Append to each forward navigate:
  *   navigate(`/input/health${returnSuffix()}`)
  */
 export function returnSuffix(): string {

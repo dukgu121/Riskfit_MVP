@@ -1,8 +1,7 @@
 /**
- * `Modal` — a controlled centered dialog for progressive disclosure (the web
- * equivalent of the PDF's bottom sheets: "자세히 보기" / 시나리오 / 비교). Thin
- * wrapper over the existing Radix `dialog` primitives so every lane gets one
- * consistent overlay + rounded card + close affordance without re-wiring Radix.
+ * `Modal` — a controlled centered dialog for progressive disclosure ("자세히
+ * 보기" / 시나리오 / 비교). Thin wrapper over the Radix `dialog` primitives for one
+ * consistent overlay + rounded card + close affordance.
  *
  * Controlled only: the parent owns `open` / `onOpenChange`. Title is required
  * for accessibility (rendered as the dialog title; pass a node, or set

@@ -1,20 +1,16 @@
 /**
- * p16 「분석 결과 요약」 — the real result summary (was the gold-reference
- * prototype `ProtoResultSummary`, now reading the cached `riskfit.analysis`).
+ * p16 「분석 결과 요약」 — reads the cached `riskfit.analysis`.
  *
- * HERO = 보장 적합도 FIT (`coverageFit.overall`, higher = better) — NOT the
- * risk score (FIT/RISK polarity contract, MIGRATION_PLAN §9). The risk-score
- * "영역별 기여도" bars that the PDF crammed here moved to p17 per the Toss
- * simplification.
+ * HERO = 보장 적합도 FIT (`coverageFit.overall`, higher = better) — NOT the risk
+ * score. This FIT/RISK polarity is a contract: the risk-score "영역별 기여도"
+ * lives on p17, never here.
  *
- * Reads READ-ONLY via `lib/draft.readAnalysis()`; on the ungated `/proto`
- * surface Agent A seeds the cache first. If the cache is genuinely missing we
- * self-seed the preview sample so the screen always renders something real.
+ * Reads READ-ONLY via `lib/draft.readAnalysis()`. The ungated `/proto` surface
+ * seeds the cache before this screen mounts, so we never seed here (see the note
+ * by the `useState` below).
  *
- * Layout: desktop WEB, two-column grid (hero left, coverage detail right),
- * Toss-minimal — white cards, single brand accent, colour only on band badges /
- * bar fills. One primary CTA (개선 방법 보기 → /improve) + one secondary
- * (상세 보기 → /result/detail).
+ * Layout: desktop WEB, two-column grid (hero left, coverage detail right). One
+ * primary CTA (개선 방법 보기 → /improve) + one secondary (상세 보기 → /result/detail).
  */
 
 import { useMemo, useState } from "react";

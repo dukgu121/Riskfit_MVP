@@ -1,6 +1,6 @@
 /**
- * p9–p14 「보험 세부 입력」 — ONE param module for the 6-coverage chain
- * (`/input/insurance/:coverageType`), restyled Toss-web inside `AppShell`.
+ * p9–p14 「보험 세부 입력」 — one param module for the 6-coverage chain
+ * (`/input/insurance/:coverageType`).
  *
  * Flow per screen:
  *   1. 가입함 / 미가입  (SegmentedControl)
@@ -10,7 +10,7 @@
  *   4. footer: 임시저장(ghost, save + back to hub) / 저장하고 다음으로(primary,
  *      save + advance to the next chain type, or back to the hub at the end)
  *
- * Per-type shape (MIGRATION_PLAN §3 p9–p14):
+ * Per-type shape:
  *   p9  실손 (actual_medical)          presence; ALSO show 보장/통원/약제비 한도 3
  *                                       fields — captured for UX but NOT persisted
  *                                       (insurance schema is strict; presence-scored)
@@ -252,7 +252,7 @@ function SubScreenBody({ id }: { id: CoverageTypeId }) {
 
   function handleSaveNext(): void {
     persist();
-    // Thread ?return= through the whole 보험 chain (RESET#2/#3 loop).
+    // Thread ?return= through the whole 보험 chain so the re-input loop lands back.
     if (next) navigate(`/input/insurance/${next}${returnSuffix()}`);
     else navigate(`/input/insurance${returnSuffix()}`);
   }
@@ -367,9 +367,9 @@ function SubScreenBody({ id }: { id: CoverageTypeId }) {
                     value={amount}
                     onValueChange={setAmount}
                     suffix={unitSuffixForType(id)}
-                    // Per MIGRATION_PLAN p9–p14: de-emphasise red for 부족 here.
-                    // Only a positive "충분" cue on the field; band colour
-                    // otherwise stays confined to the verdict line below.
+                    // De-emphasise red for 부족 on the field itself — only a
+                    // positive "충분" cue here; band colour otherwise stays
+                    // confined to the verdict line below.
                     state={
                       verdict.band === "sufficient" && amount !== null
                         ? "success"

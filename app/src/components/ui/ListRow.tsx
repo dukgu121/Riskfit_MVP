@@ -4,9 +4,8 @@
  * 보험 hub, result drill-down entries, etc.
  *
  * Renders as a react-router `<Link>` when `to` is set, a `<button>` when
- * `onClick` is set, or a plain `<div>` otherwise (static row). Visual + hover
- * affordance mirror the gold reference (`ProtoResultSummary` priority rows):
- * rounded-2xl, neutral-50 hover, neutral-300 chevron.
+ * `onClick` is set, or a plain `<div>` otherwise (static row): rounded-2xl,
+ * neutral-50 hover, neutral-300 chevron.
  */
 
 import type { ReactNode } from "react";

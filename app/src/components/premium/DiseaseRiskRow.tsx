@@ -1,11 +1,11 @@
 /**
  * `DiseaseRiskRow` — one per-disease projection row for the selected age band on
- * the 생애주기 위험 예측 screen (p28). Shows the category label (with a small
- * "예시" tag on the fabricated demo categories), a magnitude bar of the projected
- * incidence index, and a demo-mock estimated cost.
+ * the 생애주기 위험 예측 screen. Shows the category label (with a small "예시" tag
+ * on the fabricated demo categories), a magnitude bar of the projected incidence
+ * index, and a demo-mock estimated cost.
  *
- * Single-accent discipline: the bar fill carries the only colour, keyed to the
- * incidence band (low/medium/high → success/warn/danger). Numbers stay neutral.
+ * The bar fill carries the only colour, keyed to the incidence band
+ * (low/medium/high -> success/warn/danger). Numbers stay neutral.
  */
 
 import type { DiseaseRow } from "../../lib/premium/mockData";

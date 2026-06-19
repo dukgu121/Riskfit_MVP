@@ -66,10 +66,9 @@ export function Report() {
     const plan = improvementPlan(analysis, profile, insurances);
     const completeness = calculateCompleteness(profile, insurances);
 
-    // Report-AI edge data (REPORT_AI_DESIGN.md §4.1). Use `topRealContributions`
-    // — NOT `topContribution` — so demoMock estimates (family history 등) can never
-    // become the report's causal headline. gapAmount is intentionally omitted
-    // (regulatory: no specific 가입 금액 목표).
+    // Use `topRealContributions` — NOT `topContribution` — so demoMock estimates
+    // (family history 등) can never become the report's causal headline. gapAmount
+    // is intentionally omitted (regulatory: no specific 가입 금액 목표).
     const topRiskFactors = topRealContributions(profile, insurances, 2).map(
       (c) => ({
         label: c.label,

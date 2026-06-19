@@ -1,11 +1,9 @@
 /**
  * Slug → real page-component map for the ungated `/proto/:slug` preview.
  *
- * Each entry lazy-loads the REAL page module (the same one the production route
+ * Each entry lazy-loads the real page module (the same one the production route
  * renders) so the preview surface always shows the live component, seeded with
- * sample data — no separate "ComingSoon" fork for built screens. While a screen
- * is still an Agent A placeholder it simply renders that placeholder here, which
- * is itself a valid navigable AppShell surface.
+ * sample data — no separate "ComingSoon" fork for built screens.
  *
  * Param screens (보험 세부 / 영역별 상세) are NOT served from this map — they have
  * dedicated real routes `/proto/insurance/:coverageType` and `/proto/detail/:area`

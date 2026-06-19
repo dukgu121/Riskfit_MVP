@@ -10,8 +10,8 @@ import { cn } from "../../lib/cn";
  * - The indicator fill uses `transform: translateX(-X%)` so we paint the
  *   width once and only animate composite-cheap transforms. This is the
  *   Toss approach for any progress UI.
- * - Transition uses ease-out-expo at 320ms so a value jump from 20→80 still
- *   *feels* fast at the start but lands gently — never linear, which reads
+ * - Transition uses ease-out-expo at 320ms so a value jump (say 20 to 80) still
+ *   feels fast at the start but lands gently — never linear, which reads
  *   robotic.
  * - Indicator inherits a slight rounded right edge via `rounded-r-full` so
  *   even at intermediate values the leading edge looks soft, not chopped.

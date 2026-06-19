@@ -48,7 +48,7 @@ export function CoverageBar({
   const [displayed, setDisplayed] = useState(0);
 
   useEffect(() => {
-    // Trigger animation on next paint so transition runs from 0 → target.
+    // Trigger animation on next paint so the transition runs from 0 to target.
     const id = window.requestAnimationFrame(() => setDisplayed(target));
     return () => window.cancelAnimationFrame(id);
   }, [target]);

@@ -115,21 +115,20 @@ export const STORAGE_KEYS = {
   checklist: "riskfit.checklist",
   report: "riskfit.report",
   /**
-   * Single analysis cache produced once by `/analyzing` (MIGRATION_PLAN §7).
-   * localStorage-only — intentionally NOT synced to Firestore.
+   * Single analysis cache produced once by `/analyzing`. localStorage-only —
+   * intentionally NOT synced to Firestore.
    */
   analysis: "riskfit.analysis",
   /**
    * AI-written copy bundle for every post-/analyzing screen, generated once by
-   * `/analyzing` alongside the analysis cache (REPORT_AI_DESIGN.md). Signed by
-   * the analysis summary, so a re-diagnosis invalidates it. localStorage-only —
-   * NOT synced to Firestore — and a one-shot diagnosis cache, so `resetDiagnosis`
-   * clears it.
+   * `/analyzing` alongside the analysis cache. Signed by the analysis summary,
+   * so a re-diagnosis invalidates it. localStorage-only — NOT synced to
+   * Firestore — and a one-shot diagnosis cache, so `resetDiagnosis` clears it.
    */
   aiContent: "riskfit.aicontent",
   /** Premium (demo paywall) flag. localStorage-only, survives 재진단. */
   premium: "riskfit.premium",
-  /** "재방문자 온보딩 스킵" flag (OD-4). localStorage-only. */
+  /** "재방문자 온보딩 스킵" flag. localStorage-only. */
   onboardingSeen: "riskfit.onboardingSeen",
   /**
    * Which 보험 세부 step the user last resumed (p9–p14 chain). localStorage-only.

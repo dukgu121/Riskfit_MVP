@@ -1,5 +1,5 @@
 /**
- * p27 「Premium 구독하기」 — /premium. Demo paywall (NO real payment, OD-8).
+ * p27 「Premium 구독하기」 — /premium. Demo paywall (no real payment).
  *
  * A `PremiumSurface` (premium-50 wash + flat crown — no gradient) frames two
  * benefit rows from `data/premiumPlan.json` and a free-trial caption. The

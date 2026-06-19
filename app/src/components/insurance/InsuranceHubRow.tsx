@@ -1,13 +1,10 @@
 /**
- * `InsuranceHubRow` — one of the fixed 6 rows on the 보험 hub (p8).
+ * `InsuranceHubRow` — one of the fixed 6 rows on the 보험 hub.
  *
  * Shows the 보장 label + a short "what it covers" line, a status pill
  * (입력완료 / 미가입 / 미입력), and a band badge when the user has entered an
  * amount. The whole row is a `Link` to that type's 세부 screen ("입력하기").
- *
- * Visual language matches the gold reference's priority rows: a neutral leading
- * chip, rounded-2xl hover, neutral-300 chevron, single brand accent. Band
- * colour (충분/주의/부족) is the only colour, carried by the `Badge`.
+ * Band colour (충분/주의/부족) is the only colour, carried by the `Badge`.
  */
 
 import { Link } from "react-router-dom";

@@ -1,26 +1,25 @@
 /**
- * `lib/calc/improvement.ts` — the improvement-plan + improvement-simulation
- * engine for the 개선 (p23–p25) and 리포트 (p26) flow.
+ * Improvement-plan + improvement-simulation engine for the 개선 and 리포트 flow.
  *
- * THE ONLY sanctioned re-derivation outside `lib/draft.ts` (MIGRATION_PLAN §5/§7):
- * given the user's real profile + insurances, it computes a *hypothetical* world
+ * Given the user's real profile + insurances, it computes a hypothetical world
  * where the gaps the user could realistically fill are filled to the standard,
  * then re-runs the real `coverageFit` / `outOfPocket` calc over that virtual
- * insurance list. So the 72→90 FIT headline (and the 공백/자기부담금 deltas) are
- * a REAL recompute, not a fabricated number.
+ * insurance list. So the FIT headline (and the 공백/자기부담금 deltas) is a real
+ * recompute, not a fabricated number — the only sanctioned re-derivation outside
+ * `lib/draft.ts`.
  *
  * Polarity (frozen contract): everything here is 보장 적합도 FIT (higher = better).
- * We NEVER show a risk-score "improvement" — the risk model barely moves when you
- * buy coverage, and showing a "risk dropped" number would be misleading.
+ * We never show a risk-score "improvement" — the risk model barely moves when you
+ * buy coverage, and showing a "risk dropped" number would mislead.
  *
- * Scope (OD-11): only the 6 user-facing coverage types are scored, so only their
- * gaps are fillable. We reuse `restrictCoverageFitToUserFacing` + the exact same
- * standard-coverage data the live calc reads, so the projected FIT is on the same
- * scale as the cached `coverageFit.overall`.
+ * Only the 6 user-facing coverage types are scored, so only their gaps are
+ * fillable. We reuse `restrictCoverageFitToUserFacing` + the same standard-coverage
+ * data the live calc reads, so the projected FIT is on the same scale as the
+ * cached `coverageFit.overall`.
  *
- * Determinism: pure functions over the inputs + the static standard-coverage
- * table. No randomness, no actuarial model — "fill the gap to the standard" is
- * the entire mechanic.
+ * Pure functions over the inputs + the static standard-coverage table. No
+ * randomness, no actuarial model — "fill the gap to the standard" is the entire
+ * mechanic.
  */
 
 import standardCoveragesData from "../../data/standardCoverages.json";
@@ -48,10 +47,6 @@ import type {
 } from "../../types";
 
 const standardCoverages = standardCoveragesData as StandardCoverage[];
-
-/* ------------------------------------------------------------------ */
-/*  Types                                                              */
-/* ------------------------------------------------------------------ */
 
 /**
  * A single fillable improvement item — one of the 6 user-facing coverages that
@@ -111,10 +106,7 @@ export interface ImprovementSimulation {
   projectedInsurances: Insurance[];
 }
 
-/* ------------------------------------------------------------------ */
-/*  Standard-coverage lookup (mirrors coverageFit's data source)      */
-/* ------------------------------------------------------------------ */
-
+// Standard-coverage lookup, mirroring coverageFit's data source.
 function findStandard(
   userType: UserTypeId,
   coverageType: CoverageTypeId,
@@ -124,12 +116,8 @@ function findStandard(
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Virtual gap fill                                                   */
-/* ------------------------------------------------------------------ */
-
 /**
- * Build a NEW insurance list where each picked coverage is topped up to its
+ * Build a new insurance list where each picked coverage is topped up to its
  * standard. Pure: never mutates the input list.
  *
  * - presence coverages (실손/수술 — `fitMode: presence`): if absent, append a
@@ -181,10 +169,6 @@ function fillGaps(
   return next;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Gap-count helper (shared 미흡 definition)                          */
-/* ------------------------------------------------------------------ */
-
 /**
  * Count "보장 공백" = coverages whose band is 부족(insufficient) OR 주의(caution).
  * This is the user-facing "채워야 할 보장" count the 개선 flow promises to shrink.
@@ -194,10 +178,6 @@ function countGaps(items: CoverageFitItem[]): number {
     (item) => item.band === "insufficient" || item.band === "caution",
   ).length;
 }
-
-/* ------------------------------------------------------------------ */
-/*  improvementPlan                                                    */
-/* ------------------------------------------------------------------ */
 
 /**
  * Build the improvement plan from the cached analysis + the source profile /
@@ -241,8 +221,8 @@ export function improvementPlan(
         : 1
       : Math.max(0, (standardAmount ?? 0) - current);
 
-    // FIT gain from filling this single gap to standard:
-    //   presence → 100 - currentFit ;  amount → min(100, current+gap ratio) - fit.
+    // FIT recovered by filling this gap to standard: the gap closes to 100,
+    // so the gain is the distance from the current (capped) fit.
     const fitGain = Math.max(0, 100 - item.fit);
 
     return {
@@ -277,10 +257,6 @@ export function improvementPlan(
     projectedOverallFit: projectedFit.overall,
   };
 }
-
-/* ------------------------------------------------------------------ */
-/*  simulateImprovement                                                */
-/* ------------------------------------------------------------------ */
 
 /**
  * Recompute 적합도 / 공백 / 자기부담금 for a chosen set of gap fills, comparing

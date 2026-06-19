@@ -1,10 +1,10 @@
 /**
  * `KpiRow` / `KpiTile` — a compact grid of headline stats for the final report
- * (p26) and premium report (p29). Each tile is one fact: a label, a big tabular
- * value, and an optional sub-caption / delta.
+ * and premium report. Each tile is one fact: a label, a big tabular value, and
+ * an optional sub-caption / delta.
  *
- * Toss tone: neutral surface tiles, one big number each, colour reserved for an
- * optional signed delta (the only coloured element).
+ * Neutral surface tiles, one big number each; colour is reserved for an optional
+ * signed delta (the only coloured element).
  */
 
 import type { ReactNode } from "react";

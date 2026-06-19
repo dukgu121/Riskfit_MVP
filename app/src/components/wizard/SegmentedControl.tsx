@@ -1,24 +1,10 @@
 /**
- * `SegmentedControl` — Toss-style row of large chips, one of which is
- * selected at any time.
+ * `SegmentedControl` — a row of large chips, one selected at a time.
  *
  * Used for binary or 3–5-way categorical inputs (성별, 흡연, 운동 빈도,
- * 스트레스, 야근, …). Behaves like a single-select radio group but is
- * sized for thumbs — minimum 56px touch target per chip.
- *
- * Selection moves a subtle background "pill" between chips with a 200ms
- * spring (Toss interactive easing). Respects `prefers-reduced-motion`
- * by dropping the spring to a hard swap.
- *
- * Selected state visuals:
- *   - background: brand-50
- *   - border:     brand-500 (2px)
- *   - text:       brand-700 / semibold
- *
- * Unselected:
- *   - background: white
- *   - border:     neutral-200 (1px)
- *   - text:       neutral-700 / medium
+ * 스트레스, 야근, …). Behaves like a single-select radio group but is sized for
+ * thumbs — minimum 56px touch target per chip. The selected chip carries the
+ * brand wash/border; everything else is a quiet neutral outline.
  */
 
 import type { ReactNode } from "react";

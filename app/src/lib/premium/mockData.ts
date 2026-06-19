@@ -1,10 +1,10 @@
 /**
- * `lib/premium/mockData.ts` — the ONLY place in the app that fabricates
- * lifecycle / premium projection numbers (MIGRATION_PLAN, OD-8). Everything
- * produced here is a DEMO ESTIMATE and is always surfaced with a "예측 추정치"
- * caption + a disclaimer banner in the UI. There is NO actuarial model behind
- * these curves — they are deterministic, plausible-looking shapes anchored to
- * the user's real `riskScore.total` + `profile.age` so the demo feels personal.
+ * The ONLY place in the app that fabricates lifecycle / premium projection
+ * numbers. Everything produced here is a DEMO ESTIMATE and is always surfaced
+ * with a "예측 추정치" caption + a disclaimer banner in the UI. There is NO
+ * actuarial model behind these curves — they are deterministic,
+ * plausible-looking shapes anchored to the user's real `riskScore.total` +
+ * `profile.age` so the demo feels personal.
  *
  * Anchoring (so two users see different curves, but the same user is stable):
  *   - The baseline is today's real `riskScore.total` (0–100, higher = worse).
@@ -254,9 +254,9 @@ export function expectedMedicalCost(
 /* ------------------------------------------------------------------ */
 
 /**
- * Static, deterministic narrative for the premium report (p29). Toss tone, plain
- * statements, no greetings / sales push / personification. NOT LLM-generated —
- * this is the demo's fixed copy, parameterised by the projection numbers.
+ * Static, deterministic narrative for the premium report: plain statements, no
+ * greetings / sales push / personification. NOT LLM-generated — this is the
+ * demo's fixed copy, parameterised by the projection numbers.
  */
 export function premiumReportNarrative(args: {
   name?: string;

@@ -1,13 +1,13 @@
 /**
- * `ReportNarrative` — the long-form report body for the final 리포트 (p26).
+ * `ReportNarrative` — the long-form report body for the final 리포트.
  *
  * AI copy is generated ONCE in `/analyzing` and cached as part of the
- * `AiContentPackage` (REPORT_AI_DESIGN.md). This component therefore PREFERS the
- * cached `report` field (`readAiContent(signature)?.report`) and renders it
- * immediately — no per-screen network call, which would 429 the busy-mutexed
- * sidecar. When the cache is absent / signed for a different analysis, it falls
- * back to the legacy pipeline: `generateReport(summary)` attempts the LLM sidecar
- * with a template fallback (`lib/report/template.ts`), cached to `riskfit.report`.
+ * `AiContentPackage`. This component therefore PREFERS the cached `report` field
+ * (`readAiContent(signature)?.report`) and renders it immediately — no per-screen
+ * network call, which would 429 the busy-mutexed sidecar. When the cache is
+ * absent / signed for a different analysis, it falls back to the legacy pipeline:
+ * `generateReport(summary)` attempts the LLM sidecar with a template fallback
+ * (`lib/report/template.ts`), cached to `riskfit.report`.
  *
  * Either way the canonical disclaimer is forced to be the last line, and the
  * source chip reads "자동 생성" for AI-authored prose, "요약" for the deterministic

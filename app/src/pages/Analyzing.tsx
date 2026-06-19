@@ -1,26 +1,24 @@
 /**
- * p15 「AI 분석 중」 — the analysis interstitial (restyled, Toss-minimal, WEB).
+ * p15 「AI 분석 중」 — the analysis interstitial.
  *
- * ARCHITECTURE (MIGRATION_PLAN §5/§7): this is the ONE place the live analysis
- * is computed. On mount we read the merged profile + insurances and call
- * `computeAndCacheAnalysis(...)` ONCE, writing `riskfit.analysis`; every result/
- * improve/report/premium screen then reads that cache READ-ONLY. The visible
- * progress is a SCRIPTED timed checklist (~4s), NOT a real progress meter — the
- * math itself is sub-millisecond.
+ * This is the ONE place the live analysis is computed: on mount we read the
+ * merged profile + insurances and call `computeAndCacheAnalysis(...)` ONCE,
+ * writing `riskfit.analysis`. Every result/improve/report/premium screen then
+ * reads that cache READ-ONLY. The visible progress is a scripted ~4s checklist,
+ * not a real progress meter — the math itself is sub-millisecond.
  *
  * After the minimum dwell we navigate, branching on `?return=`:
  *   (default)        → /result
  *   lifecycle        → /premium/lifecycle
  *   premium-report   → /premium/report
  *
- * Back is intentionally disabled (this is a transient compute step). Honours
- * `prefers-reduced-motion`: the spinner + staged reveal collapse to a static
- * "분석하고 있어요" with the checklist shown complete; the dwell + navigate still
- * apply.
+ * Back is disabled (this is a transient compute step). Under reduced motion the
+ * spinner + staged reveal collapse to a static heading with the checklist shown
+ * complete; the dwell + navigate still apply.
  *
- * If the profile is empty (deep-link without walking the wizard) we redirect to
- * /input/basic — except under the ungated `/proto` preview, where Agent A seeds
- * a sample first, so the cache/profile are populated.
+ * An empty profile (deep-link without walking the wizard) redirects to
+ * /input/basic — except under the ungated `/proto` preview, which seeds a sample
+ * first so the cache/profile are populated.
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -84,10 +82,10 @@ const AREA_IDS: readonly AreaId[] = [
 
 /**
  * Build the `AiContentInput` for the whole flow from the freshly-computed
- * analysis + raw inputs. The `summary` is constructed EXACTLY like
- * `pages/report/Report.tsx` (same grounding whitelist + the same signature the
- * report screen will sign its cache lookups with), and per-area data mirrors
- * what `AreaDetail` feeds `areaComment`. Pure — no React.
+ * analysis + raw inputs. The `summary` must be constructed exactly like
+ * Report.tsx (same grounding whitelist, same signature the report screen will
+ * look its cache up with), and per-area data must mirror what AreaDetail feeds
+ * `areaComment` — otherwise the cached copy won't match. Pure, no React.
  */
 function buildAiContentInput(
   analysis: AnalysisCache,
@@ -97,7 +95,7 @@ function buildAiContentInput(
   const plan = improvementPlan(analysis, profile, insurances);
   const completeness = calculateCompleteness(profile, insurances);
 
-  // real-only top risk factors (demoMock excluded) — same as Report.tsx.
+  // Real-only top risk factors (demoMock excluded), same as Report.tsx.
   const realTop = topRealContributions(profile, insurances, 2);
   const topRiskFactors = realTop.map((c) => ({
     label: c.label,
@@ -219,10 +217,10 @@ export function Analyzing() {
   // Guard so the (idempotent) compute runs once even under StrictMode.
   const computedRef = useRef(false);
 
-  /* Compute + cache the analysis ONCE, kick off the ONE AI-content generation,
-   * then navigate once BOTH the scripted dwell AND generation (or its ~45s
-   * cap) are done. "맞춤 리포트를 준비하고 있어요" thus reflects real work; on
-   * failure/timeout we drop the AI cache and proceed (screens template-fall back). */
+  /* Compute + cache the analysis once, kick off the single AI-content
+   * generation, then navigate once both the scripted dwell and generation (or
+   * its ~45s cap) are done. On failure/timeout we drop the AI cache and proceed;
+   * screens fall back to their own templates. */
   useEffect(() => {
     if (!profileReady) return;
 
@@ -242,7 +240,7 @@ export function Analyzing() {
       const insurances = readInsurances<Insurance>();
       // The only live call to the analysis pipeline. Errors are swallowed so a
       // bad input can't strand the user on the spinner — /result handles a null
-      // cache by showing an empty / re-diagnose message (never re-seeding sample data).
+      // cache with a re-diagnose message, and never re-seeds sample data.
       let analysis: AnalysisCache | null;
       try {
         analysis = computeAndCacheAnalysis(profile, insurances);
@@ -251,20 +249,20 @@ export function Analyzing() {
       }
 
       if (analysis) {
-        // Generate ALL screen copy in one sidecar call, then cache it signed by
-        // the same summary the report screen will look it up with. Never throws.
+        // Generate all screen copy in one sidecar call, then cache it signed by
+        // the same summary the report screen looks it up with. Never throws.
         const input = buildAiContentInput(analysis, profile, insurances);
         const signature = aiContentSignature(input.summary);
         generateAiContent(input, { timeoutMs: AI_CONTENT_TIMEOUT_MS })
           .then((pkg) => {
-            // Write regardless of this effect-closure's cancellation: the cache
-            // is module-level and the work is real (StrictMode's dev double-mount
-            // must not drop a good bundle). Screens re-read it on mount.
+            // Write even if this effect closure was cancelled: the cache is
+            // module-level and the work is real, so StrictMode's dev double-mount
+            // must not drop a good bundle. Screens re-read it on mount.
             writeAiContent(pkg, signature);
           })
           .catch(() => {
-            // generateAiContent never rejects, but be defensive: clear any stale
-            // bundle so screens fall back to their own templates.
+            // generateAiContent never rejects, but be defensive and clear any
+            // stale bundle so screens fall back to their own templates.
             remove(STORAGE_KEYS.aiContent);
           })
           .finally(() => {
@@ -275,7 +273,7 @@ export function Analyzing() {
         workDone = true;
       }
     } else {
-      // StrictMode re-run (compute already happened): don't block on AI again.
+      // StrictMode re-run: compute already happened, don't block on AI again.
       workDone = true;
     }
 

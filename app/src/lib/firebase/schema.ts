@@ -188,10 +188,10 @@ export const profileHealthSliceSchema = z
     sleep: sleepDurationSchema.nullable().optional(),
     stress: stressLevelSchema.nullable().optional(),
     overtime: overtimeFrequencySchema.nullable().optional(),
-    // NEW p5/p6 fields. The health map stays a single Firestore slice (rules
-    // validate it as `is map`), so adding typed fields here needs NO rule
-    // change and NO schema-version bump — `.passthrough()` already let them
-    // round-trip; this just makes them validated + typed.
+    // Health/lifestyle fields. The health map stays a single Firestore slice
+    // (rules validate it as `is map`), so adding typed fields here needs NO
+    // rule change and NO schema-version bump — `.passthrough()` already let
+    // them round-trip; this just makes them validated + typed.
     chronicConditions: z.array(chronicConditionSchema).optional(),
     bloodPressure: vitalBandSchema.nullable().optional(),
     bloodSugar: vitalBandSchema.nullable().optional(),

@@ -10,21 +10,12 @@ export const REPORT_DISCLAIMER =
  * no personification, no greetings, no sales push. Short paragraphs
  * separated by a blank line — `ReportTab` splits on `\n\n`.
  *
- * Structure (per tone-guide spec):
+ * Structure:
  *   1. Risk score one-liner ("전체 리스크 점수는 N점")
  *   2. Strongest 1-2 risk-factor signals
  *   3. Coverage fit summary (with explicit "N개 중 M개" ratio when applicable)
  *   4. (optional) Expected out-of-pocket
  *   5. Mandatory disclaimer (verbatim last line)
- *
- * Wording polish notes (Critic U, P2-3):
- *   - "낮음 수준이에요" → "낮은 편이에요"  (more natural Korean)
- *   - "주의 수준이에요"  → "주의 단계예요"
- *   - "충분 수준"        → "충분한 편"
- *   - "부족 수준"        → "부족한 편"
- *   - "보통 수준"        → "보통이에요"
- *   - "입원할 경우"      → "입원하면"      (less formal)
- *   - Equal top factors are joined with "과/와" instead of repeated.
  */
 export function buildTemplateReport(summary: ReportSummary): string {
   const { riskScore, coverageFit, expectedOutOfPocketText, expectedOutOfPocket } =

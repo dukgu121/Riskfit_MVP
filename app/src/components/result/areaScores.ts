@@ -1,19 +1,15 @@
 /**
- * `areaScores.ts` — bridge the cached `RiskScore` (which already holds the four
- * weighted area sub-scores) + the profile into per-area display values for the
- * drill-down screens.
+ * Bridges the cached `RiskScore` (which already holds the four weighted area
+ * sub-scores) plus the profile into per-area display values for the drill-down
+ * screens. Reads the cache read-only; never recomputes `totalRiskScore`.
  *
  *   - `areaRawScore(area)`  — the area's own 0–100 risk score (the gauge hero).
- *       lifestyle/health/job/financial come straight from the cache (no
- *       recompute). 가족력 is a STANDALONE demo-derived score (OD-3) — it does
- *       NOT exist as a weighted area, so it is derived from the profile here.
- *   - `areaWeightedDelta(area)` — how many of the TOTAL 위험점수's points this
- *       area contributes = `rawScore × weight` (MIGRATION_PLAN §6). Used by the
- *       p17 overview's signed +N contribution bars. 가족력 is excluded from the
- *       weighted total (folded into health), so it has no weighted delta.
- *
- * Lane D owns `components/result/*`. Reads the cache READ-ONLY; never calls
- * `totalRiskScore` again.
+ *       lifestyle/health/job/financial come straight from the cache. 가족력 is
+ *       NOT a weighted area, so it is derived from the profile here.
+ *   - `areaWeightedDelta(area)` — points this area contributes to the TOTAL
+ *       위험점수 = `rawScore × weight`, for the overview's signed +N bars. 가족력
+ *       is excluded from the weighted total (folded into health), so it has no
+ *       weighted delta.
  */
 
 import scoringRules from "../../data/scoringRules.json";
@@ -21,7 +17,7 @@ import type { AreaId } from "../../lib/calc/riskContributions";
 import { familyAreaScore } from "../../lib/calc/riskContributions";
 import type { RiskScore, UserProfileInput } from "../../types";
 
-/** Weighted areas only (가족력 is not weighted — OD-3). */
+/** Weighted areas only (가족력 is not weighted). */
 export type WeightedAreaId = "lifestyle" | "health" | "job" | "financial";
 
 const WEIGHTS = scoringRules.weights;

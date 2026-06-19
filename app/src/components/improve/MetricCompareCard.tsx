@@ -1,6 +1,6 @@
 /**
- * `MetricCompareCard` — one before→after metric tile for the 개선 효과 미리보기
- * (p25). Shows a label, the current value (muted), an arrow, the projected value
+ * `MetricCompareCard` — one before/after metric tile for the 개선 효과 미리보기.
+ * Shows a label, the current value (muted), an arrow, the projected value
  * (headline), and a signed change pill coloured by whether the change is GOOD.
  *
  * `betterWhen` declares the metric's polarity so each tile decides its own

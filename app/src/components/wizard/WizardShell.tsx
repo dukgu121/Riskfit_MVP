@@ -1,23 +1,13 @@
 /**
- * `WizardShell` — the WEB-native layout for the 5-step 입력 위저드 (p4–p7 + 보험).
+ * `WizardShell` — the web-native layout for the 5-step 입력 위저드.
  *
- * Direction (PO, 2026-06-14): RiskFit is a desktop WEB app, not a phone mockup.
- * The old `StepHeader` / `StepFooter` pair assumed a fixed 480px phone column
- * (sticky `-mx-5` header, `fixed inset-x-0 bottom-0` footer). That fights the
- * shared `AppShell` (sticky web header + centred container), so the wizard gets
- * a web-native shell here:
+ * Sits inside the shared `AppShell` (sticky web header + centred container): a
+ * step counter + thin Progress, an H1 title with optional subtitle, the section
+ * cards, then an in-flow footer with helper text and one primary CTA.
  *
- *   ┌ AppShell (sticky RiskFit header, maxWidth≈600) ─────────────┐
- *   │  ‹step N/5› + thin Progress (same visual as StepHeader)      │
- *   │  H1 title  ·  optional subtitle                              │
- *   │  …sections (calm white cards, lots of whitespace)…           │
- *   │  ─ in-flow footer: helper text + one primary CTA (fullWidth) │
- *   └─────────────────────────────────────────────────────────────┘
- *
- * Single primary CTA (`Button variant="default" fullWidth`), one brand accent,
- * tabular numbers — matching the gold reference (`ProtoResultSummary`). The CTA
- * sits in the normal flow (not a fixed bar) so it reads as a web page, not an
- * app screen. Back is handled by the AppShell header chevron (`backTo`).
+ * The CTA stays in the normal flow (not a fixed bottom bar) so the screen reads
+ * as a web page, full-width with a single brand accent. Back is handled by the
+ * AppShell header chevron (`backTo`).
  */
 
 import type { ReactNode } from "react";

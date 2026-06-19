@@ -10,7 +10,7 @@ const UNIT_TO_WON: Record<string, number> = {
 }
 
 /**
- * Number-grounding safety net (REPORT_AI_DESIGN.md §4.4 — "느슨하게").
+ * Number-grounding safety net.
  *
  * `sanitizeReport` strips banned PHRASES but never checks numbers, so nothing
  * stops the model from inventing a figure — and one hallucinated "78%" (or a
@@ -23,13 +23,13 @@ const UNIT_TO_WON: Record<string, number> = {
  *   - 점 / % scores (0–100, decimal-aware) → must be a summary score.
  *   - amounts in 억/천만/만/천/원 (≥1만원) → must be a summary amount (±1만).
  *   - 개 counts → must be ≤ item count / a band-list length.
- *   - "+N%p" per-coverage margins → ALWAYS rejected (§5-2: the only sanctioned
- *     uplift is the full current→projected fit, e.g. "72%에서 90%까지").
+ *   - "+N%p" per-coverage margins → ALWAYS rejected; the only sanctioned uplift
+ *     is the full current→projected fit, e.g. "72%에서 90%까지".
  *
- * Deliberately LENIENT (per the PO decision): incidental small numbers (7일,
- * 3회, 28세, <1만원) are ignored and ±1 rounding + surface variants ("약 270만
- * 원 가까이") pass, so the Toss tone survives. It only catches NEW, ungrounded
- * score/amount/count claims and the forbidden %p margin — not natural phrasing.
+ * Deliberately lenient: incidental small numbers (7일, 3회, 28세, <1만원) are
+ * ignored and ±1 rounding + surface variants ("약 270만 원 가까이") pass, so the
+ * Toss tone survives. It only catches NEW, ungrounded score/amount/count claims
+ * and the forbidden %p margin — not natural phrasing.
  *
  * Kept in its own module (no `import.meta.env`) so it stays trivially importable
  * by both the browser client and the `tools/` smoke test.

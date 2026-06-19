@@ -1,7 +1,7 @@
 /**
- * Local display formatters for the 개선/리포트/Premium lane. Display-only — the
- * scoring layer owns the canonical numbers; these just render them in the Toss
- * 만원/억원 idiom (mirrors the gold reference `formatKrw`).
+ * Local display formatters for the 개선/리포트/Premium screens. Display-only —
+ * the scoring layer owns the canonical numbers; these just render them in the
+ * 만원/억원 idiom.
  */
 
 /** "36,000,000" → "3,600만원" / "150,000,000" → "1.5억원" / small → "9,000원". */

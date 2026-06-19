@@ -1,11 +1,11 @@
 /**
- * `PlanChecklist` — an actionable 개선 체크리스트 for p24. One row per fillable
+ * `PlanChecklist` — an actionable 개선 체크리스트. One row per fillable
  * improvement item (the user's real gaps), checkable, with progress persisted to
  * the SAME `riskfit.checklist` storage the result `ChecklistTab` uses — so a
  * box ticked here stays ticked there and vice-versa.
  *
  * Microcopy is calm "확인하기/알아보기" wording — RiskFit never says "지금 가입".
- * Toss tone: a white card, a N/total counter, a 150ms strikethrough on check.
+ * A white card, an N/total counter, a 150ms strikethrough on check.
  */
 
 import { useEffect, useMemo, useState } from "react";

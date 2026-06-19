@@ -38,10 +38,7 @@ export function healthRisk(input: UserProfileInput = {}): number {
   return clampScore(Math.min(total, scoringRules.health.cap))
 }
 
-/**
- * Sum of per-condition chronic-illness points, capped. `none` / unset → 0.
- * Now part of the weighted health total (was display-only before).
- */
+/** Sum of per-condition chronic-illness points, capped. `none` / unset → 0. */
 export function scoreChronicConditions(
   conditions: ChronicCondition[] | undefined,
 ): number {

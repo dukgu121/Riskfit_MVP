@@ -1,14 +1,14 @@
 /**
- * `ImprovementPriorityCard` — one ranked 우선 개선 항목 (p23 TOP3 / p24 list).
+ * `ImprovementPriorityCard` — one ranked 우선 개선 항목.
  *
  * Shows the rank, coverage label + band badge, the shortfall ("부족 금액" or
  * 미가입), and a `CoverageBar` of the current FIT. Optional `targetHidden`
- * collapses the recommended target behind a tap (p24 "권장 보기"), revealing the
- * standard amount + projected fit gain on demand — progressive disclosure rather
- * than dumping a number the user didn't ask for.
+ * collapses the recommended target behind a "권장 보기" tap, revealing the
+ * standard amount + projected fit gain on demand rather than dumping a number
+ * the user didn't ask for.
  *
- * Single-accent discipline: numbers stay neutral-900; only the band badge + bar
- * fill carry colour. The "권장 보기" toggle is a quiet ghost affordance.
+ * Numbers stay neutral-900; only the band badge + bar fill carry colour. The
+ * "권장 보기" toggle is a quiet ghost affordance.
  */
 
 import { useState } from "react";
@@ -38,7 +38,7 @@ const BAND_LABEL: Record<CoverageBandId, string> = {
 export interface ImprovementPriorityCardProps {
   rank: number;
   item: ImprovementItem;
-  /** Hide the recommended target behind a "권장 보기" tap (p24). */
+  /** Hide the recommended target behind a "권장 보기" tap. */
   targetHidden?: boolean;
   className?: string;
 }
@@ -105,7 +105,7 @@ export function ImprovementPriorityCard({
         </span>
       </div>
 
-      {/* recommended target (progressive disclosure on p24) */}
+      {/* recommended target (progressive disclosure) */}
       {targetHidden && (
         <button
           type="button"

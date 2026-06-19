@@ -1,8 +1,8 @@
 /**
- * `TriStateRow` — a labelled 3-way選택 row (없음 / 있음 / 모름) for the 가족력
- * screen (p7). Each disease gets a row: the condition name on the left, a
- * 3-segment selector on the right. The 모름 ("unknown") option lets the user
- * decline per-condition without skewing toward 없음.
+ * `TriStateRow` — a labelled 3-way 선택 row (없음 / 있음 / 모름) for the 가족력
+ * screen. Each condition gets a row: the name on the left, a 3-segment selector
+ * on the right. The 모름 ("unknown") option lets the user decline per-condition
+ * without skewing toward 없음.
  *
  * Selected visuals follow the wizard chip convention (brand-50 wash, brand-500
  * text), but compact and inline so a stack of rows reads as a tidy list.

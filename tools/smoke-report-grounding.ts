@@ -1,10 +1,10 @@
 /**
  * Smoke test for the report number-grounding safety net
- * (`app/src/lib/report/llm.ts:isReportGrounded`).
+ * (`app/src/lib/report/grounding.ts:isReportGrounded`).
  *
  * Run: npx tsx tools/smoke-report-grounding.ts
  *
- * Verifies the "느슨하게" policy (REPORT_AI_DESIGN.md §4.4):
+ * Verifies the lenient grounding policy:
  *   - grounded prose passes,
  *   - a hallucinated score / amount is rejected → template fallback,
  *   - natural surface variants of REAL numbers pass (Toss tone preserved),
@@ -156,7 +156,7 @@ for (const c of cases) {
   const got = isReportGrounded(c.text, summary)
   const ok = got === c.expect
   if (ok) pass++
-  console.log(`${ok ? '✅' : '❌'} ${c.name}  (기대=${c.expect}, 결과=${got})`)
+  console.log(`${ok ? 'PASS' : 'FAIL'} ${c.name}  (기대=${c.expect}, 결과=${got})`)
 }
 console.log('-'.repeat(60))
 console.log(`결과: ${pass}/${cases.length} 통과`)

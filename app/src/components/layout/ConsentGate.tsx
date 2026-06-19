@@ -1,11 +1,10 @@
 /**
- * Route guard that ensures the user has accepted the landing-page consent
- * disclaimer before reaching any data-collection or result screen.
+ * Route guard that ensures the user has accepted the consent disclaimer before
+ * reaching any data-collection or result screen.
  *
- * If consent is missing, we redirect to "/onboarding" using `<Navigate replace />`
+ * If consent is missing, we redirect to "/onboarding" with `<Navigate replace />`
  * so the bypassed route does not pollute the browser history stack. Consent is
- * captured on the onboarding-3 screen (MIGRATION_PLAN §2), so unconsented users
- * land back at the start of onboarding rather than the retired landing page.
+ * captured during onboarding, so unconsented users land back at its start.
  *
  * @example
  *   <ConsentGate>

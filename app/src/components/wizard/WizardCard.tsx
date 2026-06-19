@@ -1,8 +1,7 @@
 /**
- * `WizardCard` — a calm white section card for wizard screens, matching the
- * gold reference (`rounded-3xl bg-white px-7 py-6 shadow-card`). Optional
- * section title + helper, then the fields. Keeps every input screen's sections
- * visually identical with generous whitespace.
+ * `WizardCard` — a calm white section card for wizard screens (rounded-3xl,
+ * shadow-card). Optional section title + helper, then the fields. Keeps every
+ * input screen's sections visually identical with generous whitespace.
  */
 
 import type { ReactNode } from "react";
