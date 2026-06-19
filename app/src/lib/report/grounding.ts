@@ -95,11 +95,14 @@ export function isReportGrounded(text: string, summary: ReportSummary): boolean 
     }
   }
 
-  // Amounts: 억 / 천만 / 만 / 천 / raw 원 → 만-units (skip incidental <1만원).
-  for (const match of text.matchAll(/([\d,]+(?:\.\d+)?)\s*(억|천만|만|천|원)/g)) {
+  // Amounts: a number + optional 억/천만/만/천 unit, but ONLY when it ends in 원
+  // (skip incidental <1만원). Requiring the trailing 원 avoids false-matching the
+  // 만/천/억 syllables inside ordinary words — "12만큼"(=12 as much as), "수천",
+  // "기억" — which would otherwise wrongly fall back a perfectly grounded report.
+  for (const match of text.matchAll(/([\d,]+(?:\.\d+)?)\s*(억|천만|만|천)?\s*원/g)) {
     const raw = Number.parseFloat(match[1].replace(/,/g, ''))
     if (!Number.isFinite(raw)) continue
-    const won = raw * UNIT_TO_WON[match[2]]
+    const won = raw * UNIT_TO_WON[match[2] ?? '원']
     if (won < 10_000) continue
     const man = won / 10_000
     if (![Math.floor(man), Math.round(man), Math.ceil(man)].some((x) => manAmounts.has(x))) {
@@ -117,9 +120,9 @@ export function isReportGrounded(text: string, summary: ReportSummary): boolean 
 
 function parseAmountToMan(text: string | undefined): number | null {
   if (!text) return null
-  const match = text.match(/([\d,]+(?:\.\d+)?)\s*(억|천만|만|천|원)/)
+  const match = text.match(/([\d,]+(?:\.\d+)?)\s*(억|천만|만|천)?\s*원/)
   if (!match) return null
   const raw = Number.parseFloat(match[1].replace(/,/g, ''))
   if (!Number.isFinite(raw)) return null
-  return (raw * UNIT_TO_WON[match[2]]) / 10_000
+  return (raw * UNIT_TO_WON[match[2] ?? '원']) / 10_000
 }
