@@ -588,3 +588,36 @@ export function topContribution(
   if (rows.length === 0) return null;
   return rows.reduce((top, row) => (row.delta > top.delta ? row : top));
 }
+
+/** A `real` contribution tagged with its source area. */
+export interface RealAreaContribution extends RiskContribution {
+  kind: "real";
+  area: AreaId;
+}
+
+/**
+ * Top `n` ENGINE-REAL risk contributions across ALL areas, biggest 기여 first.
+ *
+ * `demoMock` rows are EXCLUDED structurally — they are display-only estimates
+ * (PARITY CONTRACT, see header) and must NEVER be surfaced as an authoritative
+ * cause (e.g. the report's causal headline). `topContribution` above ignores
+ * `kind` and would leak the hard-coded family-history estimates (cancer +12 등);
+ * use THIS function wherever a factor is stated as fact.
+ */
+export function topRealContributions(
+  profile: UserProfileInput = {},
+  insurances: Insurance[] = [],
+  n = 2,
+): RealAreaContribution[] {
+  const areas: AreaId[] = ["lifestyle", "health", "family", "job", "financial"];
+  const rows: RealAreaContribution[] = [];
+  for (const area of areas) {
+    for (const row of contributionsForArea(area, profile, insurances)) {
+      if (row.kind === "real" && nonNegativeNumber(row.delta) > 0) {
+        rows.push({ ...row, kind: "real", area });
+      }
+    }
+  }
+  rows.sort((a, b) => b.delta - a.delta);
+  return rows.slice(0, Math.max(0, n));
+}

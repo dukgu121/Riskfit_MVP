@@ -65,6 +65,35 @@ export const reportSummarySchema = z
     expectedOutOfPocket: z.number().min(0).max(1_000_000_000),
     expectedOutOfPocketText: z.string().max(50),
     completeness: z.number().min(0).max(100),
+    // Report-AI edge fields (Phase 1). MUST mirror types/index.ts:ReportSummary.
+    topRiskFactors: z
+      .array(
+        z
+          .object({
+            label: z.string().max(50),
+            delta: z.number().min(0).max(100),
+            area: z.string().max(30),
+            detail: z.string().max(80).optional(),
+          })
+          .strict(),
+      )
+      .max(5),
+    improvement: z
+      .object({
+        top: z
+          .array(
+            z
+              .object({
+                label: z.string().max(50),
+                currentFit: z.number().min(0).max(100),
+              })
+              .strict(),
+          )
+          .max(3),
+        currentOverallFit: z.number().min(0).max(100),
+        projectedOverallFit: z.number().min(0).max(100),
+      })
+      .strict(),
   })
   .strict()
 

@@ -26,6 +26,7 @@ import { CoverageBar } from "../../components/charts/CoverageBar";
 import { KpiRow } from "../../components/improve/KpiRow";
 import { ReportNarrative } from "../../components/improve/ReportNarrative";
 import { improvementPlan } from "../../lib/calc/improvement";
+import { topRealContributions } from "../../lib/calc/riskContributions";
 import { isPremium, readAnalysis, resetDiagnosis } from "../../lib/draft";
 import { calculateCompleteness } from "../../lib/completeness";
 import { readInsurances, readProfile } from "../../lib/storage";
@@ -65,6 +66,19 @@ export function Report() {
     const plan = improvementPlan(analysis, profile, insurances);
     const completeness = calculateCompleteness(profile, insurances);
 
+    // Report-AI edge data (REPORT_AI_DESIGN.md §4.1). Use `topRealContributions`
+    // — NOT `topContribution` — so demoMock estimates (family history 등) can never
+    // become the report's causal headline. gapAmount is intentionally omitted
+    // (regulatory: no specific 가입 금액 목표).
+    const topRiskFactors = topRealContributions(profile, insurances, 2).map(
+      (c) => ({
+        label: c.label,
+        delta: c.delta,
+        area: c.area,
+        ...(c.detail ? { detail: c.detail } : {}),
+      }),
+    );
+
     const summary: ReportSummary = {
       profileSummary: {
         name: profile.name,
@@ -79,6 +93,12 @@ export function Report() {
       expectedOutOfPocket: analysis.outOfPocket.total,
       expectedOutOfPocketText: analysis.outOfPocket.displayText,
       completeness: completeness.percent,
+      topRiskFactors,
+      improvement: {
+        top: plan.top3.map((i) => ({ label: i.label, currentFit: i.currentFit })),
+        currentOverallFit: plan.currentOverallFit,
+        projectedOverallFit: plan.projectedOverallFit,
+      },
     };
 
     return { analysis, plan, completeness, summary, name: profile.name };

@@ -233,6 +233,33 @@ export interface ReportSummary {
   expectedOutOfPocket: number
   expectedOutOfPocketText: string
   completeness: number
+
+  /* --- Report-AI edge fields (Phase 1) -------------------------------------
+     Data the engine already computes but the report historically discarded.
+     Injecting it lets the LLM write the one cross-domain causal sentence the
+     template structurally cannot (REPORT_AI_DESIGN.md §2-4). MUST stay in sync
+     with `reportSummarySchema` (.strict) — adding here without schema.ts makes
+     the sidecar reject the body and silently fall back to the template. */
+  /** Top engine-REAL 위험 기여 요인 (demoMock 제외). 인과 헤드라인 근거. */
+  topRiskFactors: Array<{
+    /** 요인 라벨 (예: "음주"). */
+    label: string
+    /** 위험 점수 기여분 (≥0, 인용만). */
+    delta: number
+    /** 출처 영역 (lifestyle/health/family/job/financial). */
+    area: string
+    /** 선택한 옵션 설명 (예: "주 3회 이상"). */
+    detail?: string
+  }>
+  /** 우선 점검 보장 + 개선 후 projected FIT. gapAmount(원금액)은 의도적으로 제외. */
+  improvement: {
+    /** 가장 비어 있는 보장 top3 (라벨 + 현재 적합도). */
+    top: Array<{ label: string; currentFit: number }>
+    /** 현재 전체 보장 적합도 FIT. */
+    currentOverallFit: number
+    /** 모든 빈 보장을 채웠을 때의 적합도 (실제 recompute, 인용 가능한 유일한 상승 수치). */
+    projectedOverallFit: number
+  }
 }
 
 export interface GeneratedReport {

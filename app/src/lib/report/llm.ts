@@ -1,5 +1,6 @@
 import type { GeneratedReport, ReportSummary } from '../../types'
 import { codexReportResponseSchema } from './schema'
+import { isReportGrounded } from './grounding'
 import { REPORT_DISCLAIMER, buildTemplateReport } from './template'
 
 type GenerateReportOptions = {
@@ -59,6 +60,10 @@ export async function generateReport(
     const text = sanitizeReport(parsed.data.text)
     if (!text) {
       return templateFallback(summary, 'empty_response')
+    }
+    // Number-grounding safety net: a hallucinated score/amount → safe template.
+    if (!isReportGrounded(text, summary)) {
+      return templateFallback(summary, 'ungrounded_number')
     }
 
     return {
