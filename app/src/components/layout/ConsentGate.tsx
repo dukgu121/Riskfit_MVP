@@ -2,8 +2,10 @@
  * Route guard that ensures the user has accepted the landing-page consent
  * disclaimer before reaching any data-collection or result screen.
  *
- * If consent is missing, we redirect to "/" using `<Navigate replace />` so
- * the bypassed route does not pollute the browser history stack.
+ * If consent is missing, we redirect to "/onboarding" using `<Navigate replace />`
+ * so the bypassed route does not pollute the browser history stack. Consent is
+ * captured on the onboarding-3 screen (MIGRATION_PLAN §2), so unconsented users
+ * land back at the start of onboarding rather than the retired landing page.
  *
  * @example
  *   <ConsentGate>
@@ -18,13 +20,13 @@ import { useConsent } from "../../lib/useConsent";
 
 export interface ConsentGateProps {
   children: ReactNode;
-  /** Where to redirect when consent is missing. Defaults to the landing page. */
+  /** Where to redirect when consent is missing. Defaults to onboarding. */
   redirectTo?: string;
 }
 
 export function ConsentGate({
   children,
-  redirectTo = "/",
+  redirectTo = "/onboarding",
 }: ConsentGateProps) {
   const { consent } = useConsent();
   const location = useLocation();

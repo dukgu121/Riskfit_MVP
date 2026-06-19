@@ -26,6 +26,32 @@ export type FamilyHistoryCondition =
 
 export type SmokingStatus = 'no' | 'yes'
 export type DrinkingFrequency = 'rare' | 'weekly_1_2' | 'weekly_3_plus'
+
+/**
+ * Chronic conditions captured on the 건강정보 screen (p5). Multi-select with an
+ * exclusive `none`. The risk engine CONSUMES these via
+ * `scoringRules.health.chronicConditions` (scoreChronicConditions in
+ * healthRisk.ts); additive and optional. `other` is a catch-all for conditions
+ * outside the listed set.
+ */
+export type ChronicCondition =
+  | 'hypertension'
+  | 'diabetes'
+  | 'hyperlipidemia'
+  | 'heart'
+  | 'thyroid'
+  | 'other'
+  | 'none'
+
+/**
+ * Derived band for a vital sign (혈압/혈당/콜레스테롤). The 건강정보 screen lets
+ * the user self-report the band; each band adds risk points to the weighted
+ * health total (scoringRules.health.vital).
+ */
+export type VitalBand = 'normal' | 'caution' | 'high'
+
+/** Diet habit captured on 생활습관 (p6). Feeds the weighted lifestyle total. */
+export type DietHabit = 'balanced' | 'irregular' | 'high_sodium' | 'high_fat'
 export type ExerciseFrequency =
   | 'weekly_3_plus'
   | 'weekly_2'
@@ -81,6 +107,23 @@ export interface UserProfile {
   sleep: SleepDuration
   stress: StressLevel
   overtime: OvertimeFrequency
+
+  /* --- NEW health/lifestyle fields (all optional, backward compatible) ---
+     Added for PDF p5/p6 fidelity. The risk engine now CONSUMES these:
+     chronicConditions + the three vital bands feed healthRisk
+     (scoringRules.health.chronicConditions/vital); dietHabit feeds
+     lifestyleRisk (scoringRules.lifestyle.dietHabit). Per-factor parity is
+     verified by tools/smoke-health-fields.ts. */
+  /** Multi-select chronic conditions (exclusive `none`). */
+  chronicConditions?: ChronicCondition[]
+  /** Self-reported blood-pressure band. */
+  bloodPressure?: VitalBand
+  /** Self-reported blood-sugar band. */
+  bloodSugar?: VitalBand
+  /** Self-reported cholesterol band. */
+  cholesterol?: VitalBand
+  /** Diet habit (생활습관). */
+  dietHabit?: DietHabit
 }
 
 export type UserProfileInput = Partial<UserProfile>
@@ -196,4 +239,45 @@ export interface GeneratedReport {
   source: 'codex' | 'template'
   text: string
   errorReason?: string
+}
+
+/**
+ * Single analysis cache (MIGRATION_PLAN §7). `/analyzing` computes the full
+ * analysis ONCE and writes it here (`riskfit.analysis`); every result/improve/
+ * report/premium screen reads it READ-ONLY via `lib/draft.ts`. No screen
+ * recomputes `totalRiskScore`/`coverageFit`/`outOfPocket` directly — that
+ * prevents headline-number drift across the flow.
+ *
+ * Polarity (frozen contract):
+ *   - `coverageFit.overall` = 보장 적합도 FIT (higher = better) — restricted to
+ *     the 6 user-facing coverage types (OD-11).
+ *   - `riskScore.total` = 위험점수 RISK (higher = worse).
+ */
+export interface AnalysisCache {
+  /** 위험점수 (higher = worse). */
+  riskScore: RiskScore
+  /** 보장 적합도 (higher = better), 6 user-facing types only. */
+  coverageFit: CoverageFit
+  /** Expected uncovered medical cost for the standard scenario. */
+  outOfPocket: OutOfPocketResult
+  /** The user-type bucket the analysis was computed against. */
+  userType: UserTypeId
+  /** Epoch millis the cache was produced. */
+  computedAt: number
+  /** Cache shape version, so a stale-shape cache can be ignored. */
+  version: number
+}
+
+/** Current analysis-cache shape version. Bump if `AnalysisCache` changes. */
+export const ANALYSIS_CACHE_VERSION = 1
+
+/**
+ * Premium (demo paywall) state, persisted to `riskfit.premium` (localStorage
+ * only — NOT synced to Firestore). `subscribed` flips when the user taps
+ * 구독하기 on p27; it survives 재진단 (resetDiagnosis keeps it).
+ */
+export interface PremiumState {
+  subscribed: boolean
+  /** Epoch millis the subscription flag was last set. */
+  updatedAt?: number
 }

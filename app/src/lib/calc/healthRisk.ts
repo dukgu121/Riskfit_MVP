@@ -1,5 +1,10 @@
 import scoringRules from '../../data/scoringRules.json'
-import type { FamilyHistoryCondition, UserProfileInput } from '../../types'
+import type {
+  ChronicCondition,
+  FamilyHistoryCondition,
+  UserProfileInput,
+  VitalBand,
+} from '../../types'
 import { clampScore } from './interpret'
 import { normalizeProfile } from './defaults'
 
@@ -24,9 +29,37 @@ export function healthRisk(input: UserProfileInput = {}): number {
       ? scoringRules.health.currentDisease.present
       : scoringRules.health.currentDisease.none) +
     scoringRules.health.hospitalVisits[profile.hospitalVisits] +
-    familyHistoryScore
+    familyHistoryScore +
+    scoreChronicConditions(profile.chronicConditions) +
+    scoreVital(profile.bloodPressure) +
+    scoreVital(profile.bloodSugar) +
+    scoreVital(profile.cholesterol)
 
   return clampScore(Math.min(total, scoringRules.health.cap))
+}
+
+/**
+ * Sum of per-condition chronic-illness points, capped. `none` / unset → 0.
+ * Now part of the weighted health total (was display-only before).
+ */
+export function scoreChronicConditions(
+  conditions: ChronicCondition[] | undefined,
+): number {
+  if (!conditions || conditions.length === 0) return 0
+  const per = scoringRules.health.chronicConditions.perCondition as Record<
+    string,
+    number
+  >
+  const sum = conditions
+    .filter((c) => c !== 'none')
+    .reduce((acc, c) => acc + (per[c] ?? 0), 0)
+  return Math.min(sum, scoringRules.health.chronicConditions.max)
+}
+
+/** Self-reported vital band (혈압/혈당/콜레스테롤) → risk points. unset → normal(0). */
+export function scoreVital(band: VitalBand | undefined): number {
+  const v = scoringRules.health.vital as Record<VitalBand, number>
+  return v[band ?? 'normal'] ?? 0
 }
 
 export function calculateBmi(heightCm: number, weightKg: number): number {

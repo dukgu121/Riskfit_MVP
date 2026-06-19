@@ -1,244 +1,126 @@
 /**
- * Wizard step 5/7 — register every insurance policy the user holds.
+ * p8 「가입 보험」 — the insurance HUB (input step 5/5), restyled Toss-web.
  *
- * UX shape:
- *   - Empty list  → centered illustration + "보험 추가하기" CTA.
- *   - Non-empty   → vertical list of compact cards, each tappable to
- *                   open an edit dialog. A ghost "+ 보험 더 추가하기"
- *                   sits below the list.
- *   - Skip path   → users *can* proceed with zero policies (보장 분석은
- *                   여전히 가능 — 다만 비교 기준이 표준값 한정이라 안내).
+ * The PDF's free-form "add policies" list is replaced by a FIXED 6-row overview
+ * (one per user-facing 보장 type, OD-11). Each row shows 입력완료 / 미가입 /
+ * 미입력 + a band badge, and is a Link into that type's 세부 screen
+ * (`/input/insurance/:coverageType`). Persistence happens inside the sub-screens
+ * (one type at a time) via `riskfit.insurances`; this page only READS that list
+ * and re-derives the row states.
  *
- * Persistence: `riskfit.insurances` — `Insurance[]`. Each insurance gets
- * a UUID at creation time (via `crypto.randomUUID()`); ids are stable
- * across edits so list animations don't flicker.
+ * The primary CTA "분석 시작" is ALWAYS enabled — a user can analyse with any
+ * subset filled in; 미입력 types are simply treated as 공백 (gaps) by the engine.
+ *
+ * Wrapped in `AppShell` (maxWidth 600, matching the p4–p7 입력 위저드 column).
+ * No phone frame.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { AnimatePresence, motion } from "motion/react";
-import { Plus } from "lucide-react";
+import { useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { motion } from "motion/react";
 
-import { InsuranceCard } from "../components/insurance/InsuranceCard";
-import { InsuranceEmptyState } from "../components/insurance/InsuranceEmptyState";
-import { InsuranceForm } from "../components/insurance/InsuranceForm";
-import { StepFooter } from "../components/wizard/StepFooter";
-import { StepHeader } from "../components/wizard/StepHeader";
-import { Button } from "../components/ui/button";
+import { AppShell } from "../components/layout/AppShell";
+import { InfoBanner } from "../components/ui/InfoBanner";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../components/ui/dialog";
-import { durations, easeOutExpo } from "../lib/motion";
-import { read, write } from "../lib/storage";
-import type { Insurance } from "../types";
-
-const STORAGE_KEY = "riskfit.insurances";
-
-interface EditorState {
-  mode: "add" | "edit";
-  insurance: Insurance | null;
-}
+  WizardFooter,
+  WizardStepHeader,
+} from "../components/insurance/InsuranceWizardChrome";
+import { InsuranceHubRow } from "../components/insurance/InsuranceHubRow";
+import {
+  INSURANCE_CHAIN,
+  hubRowState,
+  slugForCoverageId,
+} from "../components/insurance/coverageSubMeta";
+import { read, readProfile, STORAGE_KEYS } from "../lib/storage";
+import { returnSuffix } from "../lib/draft";
+import type { Insurance, UserProfileInput } from "../types";
 
 export function InputInsurance() {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [insurances, setInsurances] = useState<Insurance[]>(() =>
-    read<Insurance[]>(STORAGE_KEY, []),
-  );
-  const [editor, setEditor] = useState<EditorState | null>(null);
-  const [deleting, setDeleting] = useState<Insurance | null>(null);
-
-  const debounceRef = useRef<number | null>(null);
-  useEffect(() => {
-    if (debounceRef.current !== null) window.clearTimeout(debounceRef.current);
-    debounceRef.current = window.setTimeout(() => {
-      write(STORAGE_KEY, insurances);
-    }, 120);
-    return () => {
-      if (debounceRef.current !== null) window.clearTimeout(debounceRef.current);
-    };
-  }, [insurances]);
-
-  const openAdd = useCallback(() => {
-    setEditor({ mode: "add", insurance: null });
-  }, []);
-
-  const openEdit = useCallback((insurance: Insurance) => {
-    setEditor({ mode: "edit", insurance });
-  }, []);
-
-  const closeEditor = useCallback(() => {
-    setEditor(null);
-  }, []);
-
-  const handleSubmit = useCallback(
-    (insurance: Insurance) => {
-      setInsurances((prev) => {
-        const idx = prev.findIndex((p) => p.id === insurance.id);
-        if (idx === -1) return [...prev, insurance];
-        const next = prev.slice();
-        next[idx] = insurance;
-        return next;
-      });
-      setEditor(null);
-    },
-    [],
+  // Re-read on every entry (incl. returning from a 세부 screen). `location.key`
+  // changes on each navigation, so this useMemo re-runs and the rows refresh
+  // without a manual refetch — and without setState-in-effect.
+  const insurances = useMemo<Insurance[]>(
+    () => read<Insurance[]>(STORAGE_KEYS.insurances, []),
+    // location.key changes on every navigation → intentionally re-read storage
+    // when the user returns from a 세부 screen (cache-bust, not an unused dep).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [location.key],
   );
 
-  const handleDelete = useCallback((insurance: Insurance) => {
-    setInsurances((prev) => prev.filter((p) => p.id !== insurance.id));
-    setDeleting(null);
-  }, []);
+  const profile = useMemo<UserProfileInput>(() => readProfile<UserProfileInput>(), []);
 
-  function handleNext() {
-    write(STORAGE_KEY, insurances);
-    navigate("/analyzing");
-  }
+  const rows = useMemo(
+    () => INSURANCE_CHAIN.map((id) => hubRowState(id, insurances, profile)),
+    [insurances, profile],
+  );
 
-  const hasInsurances = insurances.length > 0;
+  const touched = rows.filter((r) => r.status !== "untouched").length;
+  const total = rows.length;
+  const allTouched = touched === total;
 
   return (
-    <section className="flex-1 flex flex-col">
-      <main
-        aria-labelledby="step-insurance-heading"
-        className="mx-auto w-full max-w-[480px] px-5 pb-40"
-      >
-        <StepHeader step={5} onBack={() => navigate("/input/family")} />
-
-        <div className="mt-6">
-          <h2
-            id="step-insurance-heading"
-            className="text-2xl font-bold leading-tight tracking-tight text-neutral-900"
-          >
-            가입 보험
-          </h2>
-          <p className="mt-2 text-[15px] leading-relaxed text-neutral-600">
-            없으면 비워둬도 괜찮아요.
-          </p>
-        </div>
-
-        <div className="mt-8">
-          {!hasInsurances ? (
-            <InsuranceEmptyState onAdd={openAdd} />
-          ) : (
-            <div className="flex flex-col gap-3">
-              <AnimatePresence initial={false}>
-                {insurances.map((insurance) => (
-                  <motion.div
-                    key={insurance.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: durations.base, ease: easeOutExpo }}
-                  >
-                    <InsuranceCard
-                      insurance={insurance}
-                      onEdit={() => openEdit(insurance)}
-                      onDelete={() => setDeleting(insurance)}
-                    />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={openAdd}
-                className="mt-2 h-14 w-full justify-center border border-dashed border-neutral-300 text-neutral-700"
-              >
-                <Plus className="h-5 w-5" aria-hidden />
-                보험 추가
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {hasInsurances ? (
-          <p className="mt-6 text-xs leading-relaxed text-neutral-500">
-            로그인한 경우 입력 정보는 Firebase에 저장됩니다. 보험상품 추천이 아닙니다.
-          </p>
-        ) : null}
-      </main>
-
-      <StepFooter
-        canContinue
-        helperText={
-          !hasInsurances ? "비워둬도 다음으로 넘어갈 수 있어요." : undefined
-        }
-        nextLabel="분석 시작"
-        onBack={() => navigate("/input/family")}
-        onNext={handleNext}
+    <AppShell title="가입 보험" backTo={`/input/family${returnSuffix()}`} brandTo="/onboarding" maxWidth={600}>
+      <WizardStepHeader
+        eyebrow="입력 5 / 5"
+        percent={100}
+        trailing={`보장 ${touched} / ${total} 입력`}
       />
 
-      {/* ----------------------------------------------- 추가·수정 모달 ---- */}
-      <Dialog
-        open={editor !== null}
-        onOpenChange={(open) => {
-          if (!open) closeEditor();
-        }}
-      >
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[440px]">
-          <DialogHeader>
-            <DialogTitle>
-              {editor?.mode === "edit" ? "보험 수정" : "보험 추가"}
-            </DialogTitle>
-            <DialogDescription>
-              보장 유형과 금액만 필수예요. 상품명·보험사는 비워둬도 괜찮아요.
-            </DialogDescription>
-          </DialogHeader>
+      {/* Title */}
+      <div className="mt-8">
+        <motion.h1
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.34, ease: [0.16, 1, 0.3, 1] }}
+          className="text-[26px] font-bold leading-tight tracking-tight text-neutral-900 lg:text-[30px]"
+        >
+          가입한 보험을 알려 주세요
+        </motion.h1>
+        <p className="mt-2 text-[15px] leading-relaxed text-neutral-500 lg:text-[16px]">
+          보장별로 입력하면 적합도를 더 정확히 분석해요. 없는 보장은 비워둬도 괜찮아요.
+        </p>
+      </div>
 
-          {editor !== null ? (
-            <InsuranceForm
-              key={`${editor.mode}:${editor.insurance?.id ?? "new"}`}
-              initial={editor.insurance}
-              onSubmit={handleSubmit}
-              onCancel={closeEditor}
-            />
-          ) : null}
-        </DialogContent>
-      </Dialog>
+      {/* 6-row hub list */}
+      <div className="mt-7 rounded-3xl bg-white px-3 py-3 shadow-card sm:px-4 sm:py-4">
+        <ul className="flex flex-col">
+          {rows.map((row, i) => (
+            <li key={row.id}>
+              {i > 0 && <div className="mx-3 h-px bg-neutral-100" />}
+              <InsuranceHubRow
+                row={row}
+                to={`/input/insurance/${slugForCoverageId(row.id)}${returnSuffix()}`}
+              />
+            </li>
+          ))}
+        </ul>
+      </div>
 
-      {/* ----------------------------------------------- 삭제 확인 모달 ---- */}
-      <Dialog
-        open={deleting !== null}
-        onOpenChange={(open) => {
-          if (!open) setDeleting(null);
-        }}
-      >
-        <DialogContent showCloseButton={false} className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>보험을 삭제합니다</DialogTitle>
-            <DialogDescription>
-              입력한 보장 정보가 사라져요. 다시 등록할 수 있어요.
-            </DialogDescription>
-          </DialogHeader>
+      <InfoBanner tone="neutral" className="mt-4">
+        비워 둔 보장은 분석에서 ‘비어 있는 보장’으로 표시돼요. 언제든 다시 입력할 수
+        있어요.
+      </InfoBanner>
 
-          <DialogFooter className="flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => setDeleting(null)}
-              className="h-12 text-base text-neutral-700"
-            >
-              취소
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => deleting && handleDelete(deleting)}
-              className="h-12 text-base"
-            >
-              삭제
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </section>
+      {/* CTA — always allowed */}
+      <div className="mt-9">
+        <WizardFooter
+          primaryLabel="분석 시작"
+          onPrimary={() => navigate(`/analyzing${returnSuffix()}`)}
+          helperText={
+            allTouched
+              ? undefined
+              : "지금 분석해도 괜찮아요. 입력한 보장만으로 결과를 만들어요."
+          }
+        />
+      </div>
+
+      <p className="mt-5 text-center text-[12px] leading-relaxed text-neutral-400">
+        로그인한 경우 입력 정보는 안전하게 저장돼요. 보험 상품 추천이 아니에요.
+      </p>
+    </AppShell>
   );
 }
 

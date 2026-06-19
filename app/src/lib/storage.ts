@@ -114,6 +114,21 @@ export const STORAGE_KEYS = {
   insurances: "riskfit.insurances",
   checklist: "riskfit.checklist",
   report: "riskfit.report",
+  /**
+   * Single analysis cache produced once by `/analyzing` (MIGRATION_PLAN §7).
+   * localStorage-only — intentionally NOT synced to Firestore.
+   */
+  analysis: "riskfit.analysis",
+  /** Premium (demo paywall) flag. localStorage-only, survives 재진단. */
+  premium: "riskfit.premium",
+  /** "재방문자 온보딩 스킵" flag (OD-4). localStorage-only. */
+  onboardingSeen: "riskfit.onboardingSeen",
+  /**
+   * Which 보험 세부 step the user last resumed (p9–p14 chain). localStorage-only.
+   * Lifestyle stays inside the health slice — no separate lifestyle key here,
+   * `readProfile` already merges health (which holds lifestyle fields too).
+   */
+  insuranceDraftStep: "riskfit.insuranceDraftStep",
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

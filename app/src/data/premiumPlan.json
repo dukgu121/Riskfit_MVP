@@ -1,0 +1,20 @@
+{
+  "id": "riskfit-premium-demo",
+  "name": "RiskFit Premium",
+  "eyebrow": "RISKFIT PREMIUM",
+  "tagline": "생애주기 위험까지 미리 살펴보세요",
+  "priceLabel": "월 4,900원",
+  "trialCaption": "지금은 데모예요. 실제 결제는 없어요.",
+  "benefits": [
+    {
+      "id": "lifecycle",
+      "title": "생애주기 위험 예측",
+      "description": "20대부터 60대까지, 나이에 따른 위험 변화를 한눈에 살펴봐요."
+    },
+    {
+      "id": "premium-report",
+      "title": "Premium 분석 리포트",
+      "description": "현재·5년·10년 후 위험과 예상 의료비를 정리한 확장 리포트를 받아봐요."
+    }
+  ]
+}

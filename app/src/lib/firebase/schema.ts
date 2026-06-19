@@ -2,7 +2,9 @@ import { z } from "zod";
 
 import type {
   AmountUnit,
+  ChronicCondition,
   CoverageTypeId,
+  DietHabit,
   DrinkingFrequency,
   ExerciseFrequency,
   FamilyHistoryCondition,
@@ -16,6 +18,7 @@ import type {
   SleepDuration,
   SmokingStatus,
   StressLevel,
+  VitalBand,
 } from "../../types";
 import { reportSummarySchema } from "../report/schema";
 
@@ -121,6 +124,22 @@ export const overtimeFrequencySchema = z.enum([
   "weekly_1_2",
   "weekly_3_plus",
 ]);
+export const chronicConditionSchema = z.enum([
+  "hypertension",
+  "diabetes",
+  "hyperlipidemia",
+  "heart",
+  "thyroid",
+  "other",
+  "none",
+]);
+export const vitalBandSchema = z.enum(["normal", "caution", "high"]);
+export const dietHabitSchema = z.enum([
+  "balanced",
+  "irregular",
+  "high_sodium",
+  "high_fat",
+]);
 export const coverageTypeIdSchema = z.enum([
   "actual_medical",
   "cancer_diagnosis",
@@ -169,6 +188,15 @@ export const profileHealthSliceSchema = z
     sleep: sleepDurationSchema.nullable().optional(),
     stress: stressLevelSchema.nullable().optional(),
     overtime: overtimeFrequencySchema.nullable().optional(),
+    // NEW p5/p6 fields. The health map stays a single Firestore slice (rules
+    // validate it as `is map`), so adding typed fields here needs NO rule
+    // change and NO schema-version bump — `.passthrough()` already let them
+    // round-trip; this just makes them validated + typed.
+    chronicConditions: z.array(chronicConditionSchema).optional(),
+    bloodPressure: vitalBandSchema.nullable().optional(),
+    bloodSugar: vitalBandSchema.nullable().optional(),
+    cholesterol: vitalBandSchema.nullable().optional(),
+    dietHabit: dietHabitSchema.nullable().optional(),
   })
   .passthrough();
 
@@ -260,6 +288,11 @@ export type ProfileHealthSlice = z.infer<typeof profileHealthSliceSchema> & {
   sleep?: SleepDuration | null;
   stress?: StressLevel | null;
   overtime?: OvertimeFrequency | null;
+  chronicConditions?: ChronicCondition[];
+  bloodPressure?: VitalBand | null;
+  bloodSugar?: VitalBand | null;
+  cholesterol?: VitalBand | null;
+  dietHabit?: DietHabit | null;
 };
 
 export type FirebaseProfileDoc = z.infer<typeof firebaseProfileDocSchema> & {

@@ -38,7 +38,7 @@ export function AppLayout() {
 
         {!hasBespokeFooter && (
           <footer className="shrink-0 border-t border-neutral-200 bg-white">
-            <div className="mx-auto max-w-[480px] px-5 py-4 text-xs text-neutral-500 leading-relaxed">
+            <div className="mx-auto w-full max-w-[1080px] px-6 py-5 text-xs leading-relaxed text-neutral-500 lg:px-8">
               이 결과는 참고만 해주세요. 로그인하면 입력 정보는 Firebase에
               저장될 수 있고, 리포트 생성에 필요한 정보는 시연용 서버로 전달될 수 있어요.
             </div>

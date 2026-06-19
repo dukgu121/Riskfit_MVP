@@ -90,6 +90,20 @@
   --color-info-800: var(--color-brand-800);
   --color-info-900: var(--color-brand-900);
 
+  /* === COLOR · Premium (muted purple — Premium tier only) ===
+     Migration OD-8: a single calm purple wash + flat crown differentiates the
+     Premium tier WITHOUT the PDF's purple gradient. Primary CTAs stay brand
+     blue so single-accent action discipline holds. Use sparingly: premium
+     surface wash (50/100) + accent (500/600) for the crown/label only. */
+  --color-premium-50:  #F5F3FF;
+  --color-premium-100: #EDE9FE;
+  --color-premium-200: #DDD6FE;
+  --color-premium-300: #C4B5FD;
+  --color-premium-400: #A78BFA;
+  --color-premium-500: #8B5CF6;
+  --color-premium-600: #7C3AED;
+  --color-premium-700: #6D28D9;
+
   /* === COLOR · Aliases (semantic naming) === */
   --color-background:         var(--color-neutral-0);
   --color-surface:            var(--color-neutral-0);
@@ -216,8 +230,12 @@
     cursor: pointer;
   }
 
-  /* Focus ring — accessible but on-brand */
-  :focus-visible {
+  /* Focus ring — accessible but on-brand.
+     Native form controls (input/textarea/select) and our composite fields
+     (AmountInput, Input, Select) style their OWN focus, so exclude them here —
+     otherwise this global ring double-draws INSIDE the field border and looks
+     broken (esp. AmountInput, whose ring lives on the wrapper, not the input). */
+  :focus-visible:not(input):not(textarea):not(select) {
     outline: none;
     box-shadow: var(--shadow-focus);
     border-radius: var(--radius-sm);

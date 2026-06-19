@@ -20,6 +20,11 @@ export const DEFAULT_PROFILE: UserProfile = {
   sleep: 'hours_7_plus',
   stress: 'normal',
   overtime: 'rare',
+  chronicConditions: ['none'],
+  bloodPressure: 'normal',
+  bloodSugar: 'normal',
+  cholesterol: 'normal',
+  dietHabit: 'balanced',
 }
 
 export function normalizeProfile(input: UserProfileInput = {}): UserProfile {

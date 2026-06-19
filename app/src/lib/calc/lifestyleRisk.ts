@@ -11,7 +11,8 @@ export function lifestyleRisk(input: UserProfileInput = {}): number {
     scoringRules.lifestyle.exercise[profile.exercise] +
     scoringRules.lifestyle.sleep[profile.sleep] +
     scoringRules.lifestyle.stress[profile.stress] +
-    scoringRules.lifestyle.overtime[profile.overtime]
+    scoringRules.lifestyle.overtime[profile.overtime] +
+    scoringRules.lifestyle.dietHabit[profile.dietHabit ?? 'balanced']
 
   return clampScore(Math.min(total, scoringRules.lifestyle.cap))
 }

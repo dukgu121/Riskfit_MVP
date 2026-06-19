@@ -16,6 +16,11 @@
     "currentDisease": { "none": 0, "present": 20 },
     "hospitalVisits": { "visits_1_2": 5, "visits_3_5": 10, "visits_6_plus": 15 },
     "familyHistoryCount": { "0": 0, "1": 10, "2_plus": 20 },
+    "chronicConditions": {
+      "perCondition": { "heart": 18, "diabetes": 15, "hypertension": 12, "hyperlipidemia": 10, "thyroid": 6, "other": 8 },
+      "max": 35
+    },
+    "vital": { "normal": 0, "caution": 5, "high": 12 },
     "cap": 100
   },
   "lifestyle": {
@@ -25,6 +30,7 @@
     "sleep": { "hours_7_plus": 0, "hours_6_7": 5, "under_6": 15 },
     "stress": { "normal": 0, "high": 15 },
     "overtime": { "rare": 0, "weekly_1_2": 5, "weekly_3_plus": 10 },
+    "dietHabit": { "balanced": 0, "irregular": 8, "high_sodium": 10, "high_fat": 10 },
     "cap": 100
   },
   "job": {
