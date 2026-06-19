@@ -119,6 +119,14 @@ export const STORAGE_KEYS = {
    * localStorage-only — intentionally NOT synced to Firestore.
    */
   analysis: "riskfit.analysis",
+  /**
+   * AI-written copy bundle for every post-/analyzing screen, generated once by
+   * `/analyzing` alongside the analysis cache (REPORT_AI_DESIGN.md). Signed by
+   * the analysis summary, so a re-diagnosis invalidates it. localStorage-only —
+   * NOT synced to Firestore — and a one-shot diagnosis cache, so `resetDiagnosis`
+   * clears it.
+   */
+  aiContent: "riskfit.aicontent",
   /** Premium (demo paywall) flag. localStorage-only, survives 재진단. */
   premium: "riskfit.premium",
   /** "재방문자 온보딩 스킵" flag (OD-4). localStorage-only. */

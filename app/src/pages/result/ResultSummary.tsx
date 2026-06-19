@@ -29,6 +29,7 @@ import { ScoreDoughnut } from "../../components/charts/ScoreDoughnut";
 import { readAnalysis, resetDiagnosis } from "../../lib/draft";
 import { readProfile } from "../../lib/storage";
 import { buildSummaryBlurb } from "../../lib/report/areaComments";
+import { readAiContent } from "../../lib/report/aiContent";
 import type {
   AnalysisCache,
   CoverageBandId,
@@ -104,6 +105,12 @@ export function ResultSummary() {
 
   const profile = useMemo(() => readProfile<UserProfileInput>(), []);
 
+  // AI-authored copy bundle (written once by /analyzing). Read READ-ONLY; the
+  // `?? buildSummaryBlurb` fallback below keeps AI-off / stale / cleared caches
+  // rendering exactly as before. This screen reads the AnalysisCache rather than
+  // the live ReportSummary, so we read the signed package as-is (no signature).
+  const ai = useMemo(() => readAiContent(), []);
+
   const handleReset = () => {
     resetDiagnosis();
     navigate("/input/basic");
@@ -136,13 +143,15 @@ export function ResultSummary() {
   // `if (!analysis)` guard without violating hook order.
   const priority = buildPriority(items);
 
-  const blurb = buildSummaryBlurb({
-    fitScore: overall,
-    fitBand: fit.band,
-    weakCoverages: fit.weakCoverages,
-    cautionCoverages: fit.cautionCoverages,
-    name: profile.name,
-  });
+  const blurb =
+    ai?.resultSummary ??
+    buildSummaryBlurb({
+      fitScore: overall,
+      fitBand: fit.band,
+      weakCoverages: fit.weakCoverages,
+      cautionCoverages: fit.cautionCoverages,
+      name: profile.name,
+    });
 
   const firstName = profile.name ? `${profile.name}님께` : "회원님께";
 

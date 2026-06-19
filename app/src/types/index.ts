@@ -269,6 +269,64 @@ export interface GeneratedReport {
 }
 
 /**
+ * The five risk drill-down areas, keyed for the AI 영역별 코멘트 bundle. Mirrors
+ * `lib/calc/riskContributions.ts:AreaId` (kept as a literal union here so the
+ * shared types module needs no calc import).
+ */
+export type AiContentAreaId =
+  | 'lifestyle'
+  | 'health'
+  | 'family'
+  | 'job'
+  | 'financial'
+
+/**
+ * One AI-written copy bundle covering EVERY post-/analyzing screen's prose
+ * (REPORT_AI_DESIGN.md). Generated ONCE at `/analyzing` and cached, so the
+ * single busy-mutexed sidecar is hit a single time per analysis instead of per
+ * screen. Each field is the FINAL string the screen renders — already either
+ * the grounded AI sentence or its deterministic template fallback, so screens
+ * read their field directly (`readAiContent()?.field`).
+ *
+ * NUMBERS ARE NEVER AUTHORED BY AI: every field is run through
+ * `isReportGrounded` against the analysis whitelist; a field carrying a
+ * hallucinated score/amount is replaced by its template, field-by-field. The
+ * scoring engine owns all 점수·금액·% — AI only quotes/interprets them.
+ *
+ * Field → screen → template fallback:
+ *   resultSummary → ResultSummary (p16) → buildSummaryBlurb
+ *   riskOverview  → RiskDetail (p17)    → overviewComment
+ *   areas.*       → AreaDetail (p18–22) → areaComment(area, …)
+ *   improveIntro  → Improve (p23)       → (the existing Improve intro copy)
+ *   report        → Report (p26)        → buildTemplateReport (incl. 면책)
+ */
+export interface AiContentPackage {
+  /** p16 요약 1줄 (보장 적합도 FIT 프레이밍). */
+  resultSummary: string
+  /** p17 위험 개요 코멘트 (총 위험점수 + 최다 기여 영역). */
+  riskOverview: string
+  /** p18–p22 영역별 코멘트 (영역 점수 + top real 기여 기반). */
+  areas: Record<AiContentAreaId, string>
+  /** p23 인트로 문장 (지금 → 개선 후 적합도 프레이밍). */
+  improveIntro: string
+  /** p26 최종 리포트 줄글 (면책 마지막 줄 포함). */
+  report: string
+}
+
+/**
+ * Cache wrapper for {@link AiContentPackage}. `signature` is
+ * `JSON.stringify(summary)` (the analysis-derived `ReportSummary`); a read whose
+ * signature doesn't match the live analysis is stale and treated as `null`, so a
+ * re-diagnosis can never show a previous run's copy. Persisted to
+ * `STORAGE_KEYS.aiContent` (localStorage only — like the analysis cache, never
+ * synced to Firestore) and cleared by `resetDiagnosis`.
+ */
+export interface AiContentCache {
+  signature: string
+  content: AiContentPackage
+}
+
+/**
  * Single analysis cache (MIGRATION_PLAN §7). `/analyzing` computes the full
  * analysis ONCE and writes it here (`riskfit.analysis`); every result/improve/
  * report/premium screen reads it READ-ONLY via `lib/draft.ts`. No screen

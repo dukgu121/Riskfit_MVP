@@ -104,6 +104,52 @@ export const codexReportResponseSchema = z
   })
   .passthrough()
 
+/* ------------------------------------------------------------------ */
+/*  AI content bundle (all post-/analyzing screens, one generation)    */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Per-screen blurbs are short Toss-tone one-liners; the report is the same
+ * 200~350자 줄글 as `/api/report`. Generous caps so a slightly long-but-valid
+ * field isn't rejected (length is the only structural guard — number grounding
+ * is enforced client-side per field by `isReportGrounded`). All fields optional:
+ * the client falls back to the deterministic template for any missing/ungrounded
+ * one, so a partial generation still yields a complete package.
+ */
+const contentBlurbSchema = z.string().min(1).max(400)
+
+export const aiContentAreasSchema = z
+  .object({
+    lifestyle: contentBlurbSchema.optional(),
+    health: contentBlurbSchema.optional(),
+    family: contentBlurbSchema.optional(),
+    job: contentBlurbSchema.optional(),
+    financial: contentBlurbSchema.optional(),
+  })
+  .partial()
+
+/**
+ * Wire shape of `POST /api/content` → `{ fields: {...} }`. The sidecar
+ * label-parses codex output into these named fields; the client re-grounds each
+ * one. `.passthrough()` mirrors `codexReportResponseSchema` so future additive
+ * fields don't break older clients.
+ */
+export const aiContentResponseSchema = z
+  .object({
+    fields: z
+      .object({
+        resultSummary: contentBlurbSchema.optional(),
+        riskOverview: contentBlurbSchema.optional(),
+        areas: aiContentAreasSchema.optional(),
+        improveIntro: contentBlurbSchema.optional(),
+        report: z.string().min(1).max(3000).optional(),
+      })
+      .passthrough(),
+  })
+  .passthrough()
+
+export type AiContentResponse = z.infer<typeof aiContentResponseSchema>
+
 export type ReportSummarySchema = z.infer<typeof reportSummarySchema>
 
 export { bandSchema }

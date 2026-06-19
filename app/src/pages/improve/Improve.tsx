@@ -21,6 +21,7 @@ import { InfoBanner } from "../../components/ui/InfoBanner";
 import { BeforeAfterCompare } from "../../components/improve/BeforeAfterCompare";
 import { ImprovementPriorityCard } from "../../components/improve/ImprovementPriorityCard";
 import { improvementPlan } from "../../lib/calc/improvement";
+import { improveIntroTemplate, readAiContent } from "../../lib/report/aiContent";
 import { readAnalysis } from "../../lib/draft";
 import { readInsurances, readProfile } from "../../lib/storage";
 import type { Insurance, UserProfileInput } from "../../types";
@@ -57,9 +58,7 @@ export function Improve() {
             {allDone ? "지금도 잘 갖춰져 있어요" : "이렇게 채우면 더 든든해져요"}
           </motion.h1>
           <p className="mt-2 text-[15px] leading-relaxed text-neutral-500 lg:text-[16px]">
-            {allDone
-              ? "비어 있는 보장이 없어요. 현재 보장을 그대로 유지해도 좋아요."
-              : `비어 있는 보장을 채우면 보장 적합도가 ${gain}%p 올라가요.`}
+            {readAiContent()?.improveIntro ?? improveIntroTemplate({ gain, allDone })}
           </p>
         </div>
 

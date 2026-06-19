@@ -1,10 +1,17 @@
 /**
  * `ReportNarrative` — the long-form report body for the final 리포트 (p26).
  *
- * Reuses the production report pipeline: `generateReport(summary)` attempts the
- * LLM sidecar with a template fallback (`lib/report/template.ts`), and the
- * canonical disclaimer is forced to be the last line. The resolved text is cached
- * to `riskfit.report` so re-entering the report doesn't regenerate it.
+ * AI copy is generated ONCE in `/analyzing` and cached as part of the
+ * `AiContentPackage` (REPORT_AI_DESIGN.md). This component therefore PREFERS the
+ * cached `report` field (`readAiContent(signature)?.report`) and renders it
+ * immediately — no per-screen network call, which would 429 the busy-mutexed
+ * sidecar. When the cache is absent / signed for a different analysis, it falls
+ * back to the legacy pipeline: `generateReport(summary)` attempts the LLM sidecar
+ * with a template fallback (`lib/report/template.ts`), cached to `riskfit.report`.
+ *
+ * Either way the canonical disclaimer is forced to be the last line, and the
+ * source chip reads "자동 생성" for AI-authored prose, "요약" for the deterministic
+ * template (detected by comparing against `buildTemplateReport`).
  *
  * Mirrors `result/ReportTab`'s split/disclaimer handling, restyled for the web
  * report layout (white card, paragraph stack, source chip, quiet disclaimer).
@@ -17,7 +24,8 @@ import { Loader2 } from "lucide-react";
 import type { GeneratedReport, ReportSummary } from "../../types";
 import { Badge } from "../ui/badge";
 import { generateReport } from "../../lib/report/llm";
-import { REPORT_DISCLAIMER } from "../../lib/report/template";
+import { readAiContent, aiContentSignature } from "../../lib/report/aiContent";
+import { REPORT_DISCLAIMER, buildTemplateReport } from "../../lib/report/template";
 import { STORAGE_KEYS, read, write } from "../../lib/storage";
 
 export interface ReportNarrativeProps {
@@ -55,6 +63,23 @@ function splitReport(text: string): { body: string[]; disclaimer: string } {
   return { body: blocks, disclaimer: REPORT_DISCLAIMER };
 }
 
+/**
+ * Resolve the report body from the ONE AI-content package generated in
+ * `/analyzing`. Returns `null` when the cache is missing / stale (different
+ * signature) so the caller falls back to the legacy `generateReport` pipeline.
+ *
+ * The package's `report` is already the final string (grounded AI or template).
+ * We label it by comparing against the deterministic template: an exact match is
+ * the template ("요약"), anything else is AI-authored prose ("자동 생성").
+ */
+function readReportFromAiContent(summary: ReportSummary): GeneratedReport | null {
+  const text = readAiContent(aiContentSignature(summary))?.report;
+  if (!text || !text.trim()) return null;
+  const source: GeneratedReport["source"] =
+    text.trim() === buildTemplateReport(summary).trim() ? "template" : "codex";
+  return { source, text };
+}
+
 export function ReportNarrative({ summary }: ReportNarrativeProps) {
   const signature = useMemo(() => JSON.stringify(summary), [summary]);
   const stableSummary = useMemo(
@@ -63,7 +88,10 @@ export function ReportNarrative({ summary }: ReportNarrativeProps) {
   );
 
   const [state, setState] = useState<CachedReport | null>(() => {
-    // Hydrate from the cached report if it matches this summary signature.
+    // Prefer the report authored once in /analyzing (no network here).
+    const fromAi = readReportFromAiContent(stableSummary);
+    if (fromAi) return { signature, report: fromAi };
+    // Otherwise hydrate from the legacy report cache if it matches this signature.
     const cached = read<CachedReport | null>(STORAGE_KEYS.report, null);
     if (cached && cached.signature === signature && cached.report?.text) {
       return cached;
@@ -74,11 +102,20 @@ export function ReportNarrative({ summary }: ReportNarrativeProps) {
   useEffect(() => {
     if (state?.signature === signature) return; // already resolved/cached
     let cancelled = false;
-    generateReport(stableSummary).then((report) => {
+    // Prefer the AI package again on a signature change (the initializer only
+    // runs on first mount); only hit the network when there's no cached copy.
+    // A resolved Promise keeps a single `setState` site (no sync set-in-effect).
+    const fromAi = readReportFromAiContent(stableSummary);
+    const resolved = fromAi
+      ? Promise.resolve(fromAi)
+      : generateReport(stableSummary);
+    resolved.then((report) => {
       if (cancelled) return;
       const next = { signature, report };
       setState(next);
-      write(STORAGE_KEYS.report, next);
+      // Only the legacy pipeline persists to the report cache; the AI package is
+      // already its own cache and must not be shadowed here.
+      if (!fromAi) write(STORAGE_KEYS.report, next);
     });
     return () => {
       cancelled = true;

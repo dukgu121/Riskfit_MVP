@@ -38,6 +38,7 @@ import {
 import { readAnalysis } from "../../lib/draft";
 import { readProfile } from "../../lib/storage";
 import { overviewComment } from "../../lib/report/areaComments";
+import { readAiContent } from "../../lib/report/aiContent";
 import type { AreaId } from "../../lib/calc/riskContributions";
 import type { AnalysisCache, RiskBandId, UserProfileInput } from "../../types";
 
@@ -88,7 +89,11 @@ export function RiskDetail() {
     .sort((x, y) => y.delta - x.delta);
 
   const worst = weightedBars[0];
-  const comment = overviewComment(total, worst ? AREA_META[worst.id].label : undefined);
+  // Text SOURCE only: prefer the AI-written overview from the /analyzing cache,
+  // fall back to the deterministic template. Numbers/scores stay engine-owned.
+  const comment =
+    readAiContent()?.riskOverview ??
+    overviewComment(total, worst ? AREA_META[worst.id].label : undefined);
 
   return (
     <AppShell title="상세 분석" backTo="/result" maxWidth={960}>

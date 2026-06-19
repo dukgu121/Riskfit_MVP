@@ -45,6 +45,7 @@ import {
 } from "../../lib/calc/riskContributions";
 import type { RiskContribution } from "../../lib/calc/riskContributions";
 import { areaComment } from "../../lib/report/areaComments";
+import { readAiContent } from "../../lib/report/aiContent";
 import { readAnalysis } from "../../lib/draft";
 import { readInsurances, readProfile } from "../../lib/storage";
 import type {
@@ -102,7 +103,11 @@ export function AreaDetail() {
     .slice()
     .sort((a, b) => b.delta - a.delta);
   const top = topContribution(rows);
-  const comment = areaComment(area, score, top?.label);
+  // Text SOURCE only: prefer the AI-written per-area comment from the /analyzing
+  // cache (keyed by AreaId), fall back to the deterministic template. The score
+  // and all factor numbers below stay engine-owned (never read from AI copy).
+  const comment =
+    readAiContent()?.areas?.[area] ?? areaComment(area, score, top?.label);
 
   const hasDemo = rows.some((r) => r.kind === "demoMock");
   const barMax = AREA_BAR_MAX[area] ?? 30;

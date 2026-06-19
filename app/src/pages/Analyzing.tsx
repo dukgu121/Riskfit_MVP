@@ -30,11 +30,33 @@ import { AnimatePresence, motion } from "motion/react";
 import { cn } from "../lib/cn";
 import { calculateCompleteness } from "../lib/completeness";
 import { computeAndCacheAnalysis } from "../lib/draft";
-import { readInsurances, readProfile } from "../lib/storage";
-import type { Insurance, UserProfileInput } from "../types";
+import { improvementPlan } from "../lib/calc/improvement";
+import {
+  contributionsForArea,
+  topContribution,
+  topRealContributions,
+} from "../lib/calc/riskContributions";
+import type { AreaId } from "../lib/calc/riskContributions";
+import { familyAreaScore } from "../lib/calc/riskContributions";
+import {
+  generateAiContent,
+  aiContentSignature,
+  writeAiContent,
+  type AiContentInput,
+} from "../lib/report/aiContent";
+import { remove, readInsurances, readProfile, STORAGE_KEYS } from "../lib/storage";
+import { AREA_META } from "../components/result/areaMeta";
+import type {
+  AnalysisCache,
+  Insurance,
+  ReportSummary,
+  UserProfileInput,
+} from "../types";
 
 /** Total scripted dwell (ms) — staged checklist + a beat on the final line. */
 const TOTAL_DELAY_MS = 4_000;
+/** Hard cap (ms) on waiting for the AI content generation before proceeding. */
+const AI_CONTENT_TIMEOUT_MS = 45_000;
 /** When each checklist line flips ○ → ✓ (ms from mount). */
 const STEP_TIMES_MS = [700, 1_700, 2_700, 3_500] as const;
 
@@ -50,6 +72,112 @@ function destinationFor(ret: string | null): string {
   if (ret === "lifecycle") return "/premium/lifecycle";
   if (ret === "premium-report") return "/premium/report";
   return "/result";
+}
+
+const AREA_IDS: readonly AreaId[] = [
+  "lifestyle",
+  "health",
+  "family",
+  "job",
+  "financial",
+] as const;
+
+/**
+ * Build the `AiContentInput` for the whole flow from the freshly-computed
+ * analysis + raw inputs. The `summary` is constructed EXACTLY like
+ * `pages/report/Report.tsx` (same grounding whitelist + the same signature the
+ * report screen will sign its cache lookups with), and per-area data mirrors
+ * what `AreaDetail` feeds `areaComment`. Pure — no React.
+ */
+function buildAiContentInput(
+  analysis: AnalysisCache,
+  profile: UserProfileInput,
+  insurances: Insurance[],
+): AiContentInput {
+  const plan = improvementPlan(analysis, profile, insurances);
+  const completeness = calculateCompleteness(profile, insurances);
+
+  // real-only top risk factors (demoMock excluded) — same as Report.tsx.
+  const realTop = topRealContributions(profile, insurances, 2);
+  const topRiskFactors = realTop.map((c) => ({
+    label: c.label,
+    delta: c.delta,
+    area: c.area,
+    ...(c.detail ? { detail: c.detail } : {}),
+  }));
+
+  const summary: ReportSummary = {
+    profileSummary: {
+      name: profile.name,
+      age: profile.age,
+      jobGroup: profile.jobGroup,
+      userType: analysis.userType,
+    },
+    riskScore: analysis.riskScore,
+    coverageFit: analysis.coverageFit,
+    weakCoverages: analysis.coverageFit.weakCoverages,
+    cautionCoverages: analysis.coverageFit.cautionCoverages,
+    expectedOutOfPocket: analysis.outOfPocket.total,
+    expectedOutOfPocketText: analysis.outOfPocket.displayText,
+    completeness: completeness.percent,
+    topRiskFactors,
+    improvement: {
+      top: plan.top3.map((i) => ({ label: i.label, currentFit: i.currentFit })),
+      currentOverallFit: plan.currentOverallFit,
+      projectedOverallFit: plan.projectedOverallFit,
+    },
+  };
+
+  // Per-area score + top contributing factor label (parity with AreaDetail's
+  // `areaComment(area, score, topContribution(rows)?.label)`).
+  const areaScore = (id: AreaId): number => {
+    switch (id) {
+      case "lifestyle":
+        return analysis.riskScore.lifestyle;
+      case "health":
+        return analysis.riskScore.health;
+      case "job":
+        return analysis.riskScore.job;
+      case "financial":
+        return analysis.riskScore.finance;
+      case "family":
+        return familyAreaScore(profile);
+    }
+  };
+  const areas = {} as AiContentInput["areas"];
+  for (const id of AREA_IDS) {
+    const rows = contributionsForArea(id, profile, insurances);
+    const top = topContribution(rows);
+    areas[id] = {
+      score: areaScore(id),
+      ...(top?.label ? { topFactorLabel: top.label } : {}),
+    };
+  }
+
+  // p17 overview "worst area" = dominant REAL risk driver's area (consistent
+  // with the report's causal headline; never a demoMock estimate).
+  const worstAreaLabel = realTop[0]
+    ? AREA_META[realTop[0].area].label
+    : undefined;
+
+  const gain = Math.max(0, plan.projectedOverallFit - plan.currentOverallFit);
+
+  return {
+    summary,
+    resultSummary: {
+      fitScore: analysis.coverageFit.overall,
+      fitBand: analysis.coverageFit.band,
+      weakCoverages: analysis.coverageFit.weakCoverages,
+      cautionCoverages: analysis.coverageFit.cautionCoverages,
+      name: profile.name,
+    },
+    riskOverview: {
+      totalRisk: analysis.riskScore.total,
+      worstAreaLabel,
+    },
+    areas,
+    improveIntro: { gain, allDone: plan.top3.length === 0 },
+  };
 }
 
 function usePrefersReducedMotion(): boolean {
@@ -91,9 +219,23 @@ export function Analyzing() {
   // Guard so the (idempotent) compute runs once even under StrictMode.
   const computedRef = useRef(false);
 
-  /* Compute + cache the analysis ONCE, then navigate after the scripted dwell. */
+  /* Compute + cache the analysis ONCE, kick off the ONE AI-content generation,
+   * then navigate once BOTH the scripted dwell AND generation (or its ~45s
+   * cap) are done. "맞춤 리포트를 준비하고 있어요" thus reflects real work; on
+   * failure/timeout we drop the AI cache and proceed (screens template-fall back). */
   useEffect(() => {
     if (!profileReady) return;
+
+    let cancelled = false;
+    let dwellDone = false;
+    let workDone = false;
+    let navTimer = 0;
+
+    const go = () => {
+      if (cancelled) return;
+      if (!dwellDone || !workDone) return;
+      navigate(destination, { replace: true });
+    };
 
     if (!computedRef.current) {
       computedRef.current = true;
@@ -101,17 +243,52 @@ export function Analyzing() {
       // The only live call to the analysis pipeline. Errors are swallowed so a
       // bad input can't strand the user on the spinner — /result handles a null
       // cache by showing an empty / re-diagnose message (never re-seeding sample data).
+      let analysis: AnalysisCache | null;
       try {
-        computeAndCacheAnalysis(profile, insurances);
+        analysis = computeAndCacheAnalysis(profile, insurances);
       } catch {
-        /* no-op — downstream guards a missing cache */
+        analysis = null; // downstream guards a missing cache
       }
+
+      if (analysis) {
+        // Generate ALL screen copy in one sidecar call, then cache it signed by
+        // the same summary the report screen will look it up with. Never throws.
+        const input = buildAiContentInput(analysis, profile, insurances);
+        const signature = aiContentSignature(input.summary);
+        generateAiContent(input, { timeoutMs: AI_CONTENT_TIMEOUT_MS })
+          .then((pkg) => {
+            // Write regardless of this effect-closure's cancellation: the cache
+            // is module-level and the work is real (StrictMode's dev double-mount
+            // must not drop a good bundle). Screens re-read it on mount.
+            writeAiContent(pkg, signature);
+          })
+          .catch(() => {
+            // generateAiContent never rejects, but be defensive: clear any stale
+            // bundle so screens fall back to their own templates.
+            remove(STORAGE_KEYS.aiContent);
+          })
+          .finally(() => {
+            workDone = true;
+            go();
+          });
+      } else {
+        workDone = true;
+      }
+    } else {
+      // StrictMode re-run (compute already happened): don't block on AI again.
+      workDone = true;
     }
 
-    const timer = window.setTimeout(() => {
-      navigate(destination, { replace: true });
+    // Scripted dwell (also the floor so the checklist never flashes past).
+    navTimer = window.setTimeout(() => {
+      dwellDone = true;
+      go();
     }, TOTAL_DELAY_MS);
-    return () => window.clearTimeout(timer);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(navTimer);
+    };
   }, [profileReady, profile, destination, navigate]);
 
   /* Stage the checklist ○ → ✓ on the scripted timeline. */

@@ -233,8 +233,8 @@ export function upsertInsurance(
  * Reset the diagnosis for a fresh "다시 진단하기" run.
  *
  * CLEARS: profile slices (basic/health/family + aggregate/legacy), insurances
- * (plural + legacy singular), the analysis cache, the checklist, the cached
- * report, and the insurance draft-step pointer.
+ * (plural + legacy singular), the analysis cache, the AI content bundle, the
+ * checklist, the cached report, and the insurance draft-step pointer.
  *
  * KEEPS: consent (so the user doesn't re-accept) and premium (so a paid demo
  * survives re-diagnosis — OD-6). Onboarding-seen is also kept (no reason to
@@ -251,6 +251,7 @@ export function resetDiagnosis(): void {
     STORAGE_KEYS.checklist,
     STORAGE_KEYS.report,
     STORAGE_KEYS.analysis,
+    STORAGE_KEYS.aiContent,
     STORAGE_KEYS.insuranceDraftStep,
   ];
   for (const key of keysToClear) remove(key);
