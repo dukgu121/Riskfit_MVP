@@ -20,15 +20,8 @@
  *   원 to keep aggregation math simple.
  */
 
-import { z } from "zod";
-
 import coverageTypesJson from "../data/coverageTypes.json";
-import type {
-  AmountUnit,
-  CoverageType,
-  CoverageTypeId,
-  CoverageValueKind,
-} from "../types";
+import type { AmountUnit, CoverageType, CoverageTypeId } from "../types";
 
 /* ------------------------------------------------------------------
    Coverage-type registry
@@ -47,7 +40,7 @@ export function getCoverageType(id: CoverageTypeId): CoverageType {
 /* ------------------------------------------------------------------
    UI shape per coverage type
    ------------------------------------------------------------------ */
-export type CoverageInputMode = "boolean" | "money_man_won" | "money_raw_won";
+type CoverageInputMode = "boolean" | "money_man_won" | "money_raw_won";
 
 /** What input control the form should render for this coverage type. */
 export function coverageInputMode(id: CoverageTypeId): CoverageInputMode {
@@ -110,93 +103,7 @@ export function fromStoredAmount(
   return null;
 }
 
-/* ------------------------------------------------------------------
-   Display helpers (read-only card)
-   ------------------------------------------------------------------ */
-
-const krwFormatter = new Intl.NumberFormat("ko-KR");
-
-/** Compact human-friendly amount string (e.g. "5,000 만원 · 1회"). */
-export function formatStoredAmount(
-  id: CoverageTypeId,
-  storedAmount: number | null | undefined,
-): string {
-  const t = getCoverageType(id);
-  if (t.valueKind === "boolean") {
-    return storedAmount === null || storedAmount === undefined
-      ? "—"
-      : "가입";
-  }
-  if (storedAmount === null || storedAmount === undefined) {
-    return "—";
-  }
-  if (t.unit === "krw_per_day") {
-    return `${krwFormatter.format(Math.round(storedAmount))} 원/일`;
-  }
-  if (t.unit === "krw_per_month") {
-    return `${krwFormatter.format(Math.round(storedAmount))} 원/월`;
-  }
-  // krw or krw_per_event — show 만원 for readability.
-  const manWon = Math.round(storedAmount / 10_000);
-  if (t.unit === "krw_per_event") {
-    return `${krwFormatter.format(manWon)} 만원 · 1회`;
-  }
-  return `${krwFormatter.format(manWon)} 만원`;
-}
-
 /** Helper to keep amountUnit in sync with the chosen coverageType. */
 export function defaultAmountUnit(id: CoverageTypeId): AmountUnit {
   return getCoverageType(id).unit;
-}
-
-export function valueKindFor(id: CoverageTypeId): CoverageValueKind {
-  return getCoverageType(id).valueKind;
-}
-
-/* ------------------------------------------------------------------
-   Zod schema for the insurance form
-   ------------------------------------------------------------------ */
-export const insuranceFormSchema = z.object({
-  id: z.string(),
-  company: z.string().trim().max(60).optional(),
-  productName: z.string().trim().max(80).optional(),
-  coverageType: z.enum([
-    "actual_medical",
-    "cancer_diagnosis",
-    "cerebrovascular_diagnosis",
-    "cardiac_diagnosis",
-    "disease_hospitalization",
-    "accident_hospitalization",
-    "surgery",
-    "income_interruption",
-    "death",
-    "liability",
-    "other",
-  ]),
-  /**
-   * What the form holds:
-   *   - boolean coverages → `coverageBool`
-   *   - money coverages   → `coverageAmount` in either 만원 or 원 (see `coverageInputMode`)
-   */
-  coverageBool: z.boolean().nullable(),
-  coverageAmount: z.number().nonnegative().nullable(),
-  monthlyPremium: z.number().nonnegative().nullable(),
-});
-
-export type InsuranceFormValues = z.infer<typeof insuranceFormSchema>;
-
-/** Build an empty form state, defaulting to the most common coverage. */
-export function emptyInsuranceForm(): InsuranceFormValues {
-  return {
-    id:
-      typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
-    company: "",
-    productName: "",
-    coverageType: "actual_medical",
-    coverageBool: true,
-    coverageAmount: null,
-    monthlyPremium: null,
-  };
 }
