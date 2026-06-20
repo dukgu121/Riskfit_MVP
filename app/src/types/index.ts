@@ -310,6 +310,8 @@ export interface AiContentPackage {
   improveIntro: string
   /** 최종 리포트 줄글 (면책 마지막 줄 포함). */
   report: string
+  /** 생애주기(Premium) 줄글 (\n\n 구분, demo-mock 예측 숫자 기반). */
+  premium: string
 }
 
 /**

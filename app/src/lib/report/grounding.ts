@@ -34,7 +34,11 @@ const UNIT_TO_WON: Record<string, number> = {
  * Kept in its own module (no `import.meta.env`) so it stays trivially importable
  * by both the browser client and the `tools/` smoke test.
  */
-export function isReportGrounded(text: string, summary: ReportSummary): boolean {
+export function isReportGrounded(
+  text: string,
+  summary: ReportSummary,
+  extra?: { scores?: readonly number[]; manAmounts?: readonly number[] },
+): boolean {
   // (0) Per-coverage margin "+N%p" is forbidden outright — reject any digit-%-p.
   if (/\d\s*[%％]\s*[pP]/.test(text)) return false
 
@@ -87,6 +91,11 @@ export function isReportGrounded(text: string, summary: ReportSummary): boolean 
     if (Array.isArray(arr)) counts.add(arr.length)
   }
 
+  // (4) Caller-supplied extras — numbers not in the analysis summary, e.g. the
+  // premium narrative's projection figures. Same ±1 rounding tolerance.
+  extra?.scores?.forEach(addScore)
+  extra?.manAmounts?.forEach(addMan)
+
   // Percentages / 점 scores (decimal-aware).
   for (const match of text.matchAll(/(\d+(?:\.\d+)?)\s*(?:%|％|점)/g)) {
     const value = Number.parseFloat(match[1])
@@ -125,4 +134,30 @@ function parseAmountToMan(text: string | undefined): number | null {
   const raw = Number.parseFloat(match[1].replace(/,/g, ''))
   if (!Number.isFinite(raw)) return null
   return (raw * UNIT_TO_WON[match[2] ?? '원']) / 10_000
+}
+
+/**
+ * Pull the claim numbers (점/% scores and 억/만/천/원 amounts ≥1만, as 만-units)
+ * out of a text — used to build a grounding whitelist FROM a deterministic
+ * template (e.g. the premium narrative) so an AI rephrase of it stays grounded
+ * against the same projection figures.
+ */
+export function extractClaimNumbers(text: string): {
+  scores: number[]
+  manAmounts: number[]
+} {
+  const scores: number[] = []
+  for (const match of text.matchAll(/(\d+(?:\.\d+)?)\s*(?:%|％|점)/g)) {
+    const value = Number.parseFloat(match[1])
+    if (Number.isFinite(value)) scores.push(value)
+  }
+  const manAmounts: number[] = []
+  for (const match of text.matchAll(/([\d,]+(?:\.\d+)?)\s*(억|천만|만|천)?\s*원/g)) {
+    const raw = Number.parseFloat(match[1].replace(/,/g, ''))
+    if (!Number.isFinite(raw)) continue
+    const won = raw * UNIT_TO_WON[match[2] ?? '원']
+    if (won < 10_000) continue
+    manAmounts.push(won / 10_000)
+  }
+  return { scores, manAmounts }
 }

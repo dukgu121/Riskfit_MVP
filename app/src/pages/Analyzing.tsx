@@ -49,7 +49,7 @@ import type {
 /** Total scripted dwell (ms) — staged checklist + a beat on the final line. */
 const TOTAL_DELAY_MS = 4_000;
 /** Hard cap (ms) on waiting for the AI content generation before proceeding. */
-const AI_CONTENT_TIMEOUT_MS = 45_000;
+const AI_CONTENT_TIMEOUT_MS = 90_000;
 /** When each checklist line flips ○ → ✓ (ms from mount). */
 const STEP_TIMES_MS = [700, 1_700, 2_700, 3_500] as const;
 
@@ -170,6 +170,12 @@ function buildAiContentInput(
     },
     areas,
     improveIntro: { gain, allDone: plan.top3.length === 0 },
+    premium: {
+      name: profile.name,
+      baselineRisk: analysis.riskScore.total,
+      baselineAge:
+        typeof profile.age === "number" && profile.age > 0 ? profile.age : 30,
+    },
   };
 }
 

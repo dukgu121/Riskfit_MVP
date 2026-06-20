@@ -29,8 +29,9 @@
 
 import type { AiContentAreaId, AiContentPackage, ReportSummary } from '../../types'
 import { aiContentResponseSchema } from './schema'
-import { isReportGrounded } from './grounding'
+import { extractClaimNumbers, isReportGrounded } from './grounding'
 import { buildTemplateReport } from './template'
+import { premiumReportNarrative } from '../premium/mockData'
 import {
   areaComment,
   buildSummaryBlurb,
@@ -77,6 +78,8 @@ export interface AiContentInput {
   areas: Record<AiContentAreaId, AiContentAreaInput>
   /** 개선 인트로 fallback input (gain in %p; `allDone` when nothing to fill). */
   improveIntro: { gain: number; allDone: boolean }
+  /** 생애주기(Premium) — template facts source + fallback (mock projections). */
+  premium: { name?: string; baselineRisk: number; baselineAge: number }
 }
 
 /* ------------------------------------------------------------------ */
@@ -110,6 +113,7 @@ export function buildTemplatePackage(input: AiContentInput): AiContentPackage {
     areas,
     improveIntro: improveIntroTemplate(input.improveIntro),
     report: buildTemplateReport(input.summary),
+    premium: premiumReportNarrative(input.premium).join('\n\n'),
   }
 }
 
@@ -164,6 +168,7 @@ export async function generateAiContent(
       body: JSON.stringify({
         summary: input.summary,
         areaScores: input.areas,
+        premiumFacts: premiumReportNarrative(input.premium),
       }),
       signal: controller.signal,
     })
@@ -193,15 +198,20 @@ function mergeGroundedFields(
     areas?: Partial<Record<string, string>>
     improveIntro?: string
     report?: string
+    premium?: string
   },
   input: AiContentInput,
   template: AiContentPackage,
 ): AiContentPackage {
   const summary = input.summary
-  const pick = (ai: string | undefined, fallback: string): string => {
+  const pick = (
+    ai: string | undefined,
+    fallback: string,
+    extra?: { scores?: readonly number[]; manAmounts?: readonly number[] },
+  ): string => {
     const text = ai?.trim()
     if (!text) return fallback
-    return isReportGrounded(text, summary) ? text : fallback
+    return isReportGrounded(text, summary, extra) ? text : fallback
   }
 
   const areas = {} as Record<AiContentAreaId, string>
@@ -215,6 +225,13 @@ function mergeGroundedFields(
     areas,
     improveIntro: pick(fields.improveIntro, template.improveIntro),
     report: pick(fields.report, template.report),
+    // Premium cites mock projection figures (not in the analysis summary), so
+    // ground it against the numbers in the deterministic template facts.
+    premium: pick(
+      fields.premium,
+      template.premium,
+      extractClaimNumbers(template.premium),
+    ),
   }
 }
 

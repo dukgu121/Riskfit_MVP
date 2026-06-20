@@ -147,7 +147,7 @@ export function ReportNarrative({ summary }: ReportNarrativeProps) {
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-[17px] font-bold text-neutral-900">분석 리포트</h2>
         <Badge variant={report.source === "codex" ? "info" : "neutral"} size="sm">
-          {report.source === "codex" ? "자동 생성" : "요약"}
+          {report.source === "codex" ? "AI 작성" : "기본 요약"}
         </Badge>
       </div>
 

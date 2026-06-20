@@ -17,6 +17,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 
 import { AppShell } from "../../components/layout/AppShell";
+import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { InfoBanner } from "../../components/ui/InfoBanner";
 import { PremiumSurface } from "../../components/ui/PremiumSurface";
@@ -24,6 +25,7 @@ import { ScoreDoughnut } from "../../components/charts/ScoreDoughnut";
 import { KpiRow } from "../../components/improve/KpiRow";
 import { LifecycleLineChart } from "../../components/premium/LifecycleLineChart";
 import { readAnalysis, resetDiagnosis } from "../../lib/draft";
+import { readAiContent } from "../../lib/report/aiContent";
 import { readProfile } from "../../lib/storage";
 import { riskBand } from "../../lib/calc/interpret";
 import type { UserProfileInput } from "../../types";
@@ -63,6 +65,16 @@ export function PremiumReport() {
   const { risk, bandLabel, name, kpis, curve, cost } = model;
   const labels = curve.map((p) => String(p.age));
   const values = curve.map((p) => p.risk);
+
+  // Prefer the AI-written 생애주기 narrative from the /analyzing cache; fall back
+  // to the deterministic template. It's "AI 작성" only when it differs from the
+  // template (a grounding-failed field collapses back to the template text).
+  const templateNarrative = model.narrative.join("\n\n").trim();
+  const aiPremium = readAiContent()?.premium?.trim();
+  const premiumIsAi = !!aiPremium && aiPremium !== templateNarrative;
+  const narrativeParas = aiPremium
+    ? aiPremium.split(/\n\s*\n/).map((s) => s.trim()).filter(Boolean)
+    : model.narrative;
 
   // Scoped reset (keeps consent + premium), then re-enter the wizard and ask
   // /analyzing to return here via ?return=.
@@ -192,11 +204,16 @@ export function PremiumReport() {
             </div>
           </section>
 
-          {/* Narrative (static demo template) */}
+          {/* Narrative — AI-written when available, else the demo template */}
           <section className="rounded-3xl bg-white px-7 py-6 shadow-card">
-            <h2 className="text-[17px] font-bold text-neutral-900">생애주기 요약</h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-[17px] font-bold text-neutral-900">생애주기 요약</h2>
+              <Badge variant={premiumIsAi ? "info" : "neutral"} size="sm">
+                {premiumIsAi ? "AI 작성" : "기본 요약"}
+              </Badge>
+            </div>
             <div className="mt-4 space-y-4 text-[15px] leading-relaxed text-neutral-800">
-              {model.narrative.map((para, i) => (
+              {narrativeParas.map((para, i) => (
                 <p key={i}>{para}</p>
               ))}
             </div>

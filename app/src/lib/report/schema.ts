@@ -143,6 +143,7 @@ export const aiContentResponseSchema = z
         areas: aiContentAreasSchema.optional(),
         improveIntro: contentBlurbSchema.optional(),
         report: z.string().min(1).max(3000).optional(),
+        premium: z.string().min(1).max(3000).optional(),
       })
       .passthrough(),
   })

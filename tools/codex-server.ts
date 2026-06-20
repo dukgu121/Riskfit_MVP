@@ -36,13 +36,14 @@ const contentRequestSchema = z
       })
       .partial()
       .optional(),
+    premiumFacts: z.array(z.string().max(800)).max(8).optional(),
   })
   .strict()
 
 const DEFAULT_ALLOWED_ORIGINS =
   'http://localhost:38215,http://127.0.0.1:38215'
 const DEFAULT_PORT = 47821
-const DEFAULT_CODEX_TIMEOUT_MS = 30_000
+const DEFAULT_CODEX_TIMEOUT_MS = 90_000
 const DEFAULT_MAX_OUTPUT_BYTES = 256_000
 const MAX_REPORT_TEXT_CHARS = 3000
 
@@ -201,6 +202,7 @@ export function createApp(config: SidecarConfig = readConfig()) {
         const result = await runCodexContent(
           parsed.data.summary,
           parsed.data.areaScores ?? {},
+          parsed.data.premiumFacts ?? [],
           config,
         )
         logRequest('POST /api/content', 200, Date.now() - start)
@@ -294,9 +296,10 @@ export async function runCodexReport(
 export async function runCodexContent(
   summary: ReportSummarySchema,
   areas: Record<string, ContentAreaInput>,
+  premiumFacts: string[],
   options: CodexRunOptions,
 ): Promise<{ fields: ReturnType<typeof parseContentFields> }> {
-  const raw = await runCodex(buildContentPrompt(summary, areas), options)
+  const raw = await runCodex(buildContentPrompt(summary, areas, premiumFacts), options)
   if (!raw.trim()) throw new Error('codex returned empty output')
   const fields = parseContentFields(raw)
   // Keep the disclaimer guarantee for the long report field (the per-screen
@@ -397,6 +400,7 @@ const CONTENT_AREA_ORDER = [
 export function buildContentPrompt(
   summary: ReportSummarySchema,
   areas: Record<string, ContentAreaInput> = {},
+  premiumFacts: string[] = [],
 ): string {
   const areaLines = CONTENT_AREA_ORDER.map((id) => {
     const a = areas[id]
@@ -481,6 +485,17 @@ export function buildContentPrompt(
     '   한국어 200~350자 내외.',
     '<<<END>>>',
     '',
+    '<<<FIELD:premium>>>',
+    '생애주기(Premium) 추정 리포트. 아래 "사실 문장"들을 토스 톤으로 자연스럽게 다시 쓴다.',
+    '**새 숫자·새 사실 추가 절대 금지** — 사실 문장에 있는 숫자(점/만 원/년)만 그대로 사용한다.',
+    '특정 상품·보험사·가입 금액 금지, 동사는 "살펴보다/점검하다"류. 면책 문구는 넣지 않는다(화면이 따로 표시).',
+    '3문단 내외, 사실 문장의 의미는 유지하되 표현만 매끄럽게. 사실 문장이 없으면 이 필드는 비워 둔다.',
+    '사실 문장:',
+    premiumFacts.length
+      ? premiumFacts.map((f, i) => `   (${i + 1}) ${f}`).join('\n')
+      : '   (없음)',
+    '<<<END>>>',
+    '',
     'INPUT (계산 결과 JSON):',
     JSON.stringify({ ...summary, _areaScores: areas }),
   ].join('\n')
@@ -499,6 +514,7 @@ export function parseContentFields(text: string): {
   riskOverview?: string
   improveIntro?: string
   report?: string
+  premium?: string
   areas?: Record<string, string>
 } {
   const out: {
@@ -506,6 +522,7 @@ export function parseContentFields(text: string): {
     riskOverview?: string
     improveIntro?: string
     report?: string
+    premium?: string
     areas?: Record<string, string>
   } = {}
 
@@ -523,6 +540,7 @@ export function parseContentFields(text: string): {
   out.riskOverview = field('riskOverview')
   out.improveIntro = field('improveIntro')
   out.report = field('report')
+  out.premium = field('premium')
 
   // Per-area blocks live inside the `areas` field (or anywhere in the text — we
   // scan globally to survive codex dropping the outer FIELD wrapper).
