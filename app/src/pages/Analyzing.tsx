@@ -349,12 +349,12 @@ export function Analyzing() {
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col items-center gap-1"
+              className="flex flex-col items-center gap-2.5"
             >
-              <p className="flex items-center gap-1.5 text-[14px] font-semibold text-brand-500">
+              <p className="text-[15px] font-semibold text-brand-500">
                 AI가 맞춤 리포트를 작성하고 있어요
-                <BouncingDots />
               </p>
+              <BouncingDots />
               <p className="text-[12px] text-neutral-400">거의 다 됐어요 · 멈춘 게 아니에요</p>
             </motion.div>
           ) : reduced ? (
@@ -406,20 +406,20 @@ export function Analyzing() {
   );
 }
 
-/** Three dots bouncing in a wave — the "AI is writing" cue next to the caption. */
+/** Three dots bouncing in a wave — the "AI is working" cue. */
 function BouncingDots() {
   return (
-    <span aria-hidden className="inline-flex items-end gap-[3px] pb-[3px]">
+    <span aria-hidden className="inline-flex items-end gap-2">
       {[0, 1, 2].map((i) => (
         <motion.span
           key={i}
-          className="size-[5px] rounded-full bg-brand-500"
-          animate={{ y: [0, -4, 0], opacity: [0.35, 1, 0.35] }}
+          className="size-2.5 rounded-full bg-brand-500"
+          animate={{ y: [0, -10, 0], scale: [1, 1.25, 1], opacity: [0.45, 1, 0.45] }}
           transition={{
-            duration: 0.9,
+            duration: 0.7,
             repeat: Infinity,
             ease: "easeInOut",
-            delay: i * 0.15,
+            delay: i * 0.18,
           }}
         />
       ))}
