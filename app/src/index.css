@@ -255,4 +255,22 @@
     letter-spacing: var(--tracking-tight);
     font-variant-numeric: tabular-nums;
   }
+
+  /* "AI 작성 중" — 점 세 개가 차례로 통통 튐 (per-dot animation-delay로 스태거). */
+  .animate-dot-bounce {
+    animation: riskfit-dot-bounce 0.9s ease-in-out infinite;
+  }
+}
+
+@keyframes riskfit-dot-bounce {
+  0%,
+  70%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  35% {
+    transform: translateY(-10px);
+    opacity: 1;
+  }
 }

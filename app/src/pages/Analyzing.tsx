@@ -406,21 +406,19 @@ export function Analyzing() {
   );
 }
 
-/** Three dots bouncing in a wave — the "AI is working" cue. */
+/**
+ * Three dots bouncing in a wave — the "AI is working" cue. Pure CSS keyframe
+ * (`riskfit-dot-bounce` in index.css) on inline-block dots: Framer Motion's
+ * transform on inline spans was unreliable, CSS animation always runs.
+ */
 function BouncingDots() {
   return (
     <span aria-hidden className="inline-flex items-end gap-2">
       {[0, 1, 2].map((i) => (
-        <motion.span
+        <span
           key={i}
-          className="size-2.5 rounded-full bg-brand-500"
-          animate={{ y: [0, -10, 0], scale: [1, 1.25, 1], opacity: [0.45, 1, 0.45] }}
-          transition={{
-            duration: 0.7,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: i * 0.18,
-          }}
+          className="inline-block size-2.5 rounded-full bg-brand-500 animate-dot-bounce"
+          style={{ animationDelay: `${i * 0.16}s` }}
         />
       ))}
     </span>
