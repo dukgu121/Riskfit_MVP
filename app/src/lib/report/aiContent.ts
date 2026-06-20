@@ -30,6 +30,7 @@
 import type { AiContentAreaId, AiContentPackage, ReportSummary } from '../../types'
 import { aiContentResponseSchema } from './schema'
 import { extractClaimNumbers, isReportGrounded } from './grounding'
+import { resolveSidecarUrl } from './sidecar'
 import { buildTemplateReport } from './template'
 import { premiumReportNarrative } from '../premium/mockData'
 import {
@@ -144,8 +145,7 @@ export async function generateAiContent(
   // Forced-off → straight template (matches `generateReport`'s VITE_LLM_DISABLED).
   if (import.meta.env.VITE_LLM_DISABLED === 'true') return template
 
-  const sidecarUrl =
-    options.sidecarUrl ?? import.meta.env.VITE_LLM_SIDECAR_URL ?? ''
+  const sidecarUrl = resolveSidecarUrl(options.sidecarUrl)
   const token = options.token ?? import.meta.env.VITE_LLM_SIDECAR_TOKEN
   const fetchImpl = options.fetchImpl ?? fetch
   const endpoint = sidecarUrl

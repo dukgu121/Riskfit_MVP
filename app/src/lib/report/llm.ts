@@ -1,6 +1,7 @@
 import type { GeneratedReport, ReportSummary } from '../../types'
 import { codexReportResponseSchema } from './schema'
 import { isReportGrounded } from './grounding'
+import { resolveSidecarUrl } from './sidecar'
 import { REPORT_DISCLAIMER, buildTemplateReport } from './template'
 
 type GenerateReportOptions = {
@@ -16,8 +17,7 @@ export async function generateReport(
   summary: ReportSummary,
   options: GenerateReportOptions = {},
 ): Promise<GeneratedReport> {
-  const sidecarUrl =
-    options.sidecarUrl ?? import.meta.env.VITE_LLM_SIDECAR_URL ?? ''
+  const sidecarUrl = resolveSidecarUrl(options.sidecarUrl)
   const token = options.token ?? import.meta.env.VITE_LLM_SIDECAR_TOKEN
   const fetchImpl = options.fetchImpl ?? fetch
 
