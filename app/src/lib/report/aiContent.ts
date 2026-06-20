@@ -264,3 +264,36 @@ export function writeAiContent(
 ): void {
   write(STORAGE_KEYS.aiContent, { signature, content })
 }
+
+/* ------------------------------------------------------------------ */
+/*  In-flight dedupe (StrictMode double-mount safe)                    */
+/* ------------------------------------------------------------------ */
+
+let inFlight: { signature: string; promise: Promise<void> } | null = null
+
+/**
+ * Generate (once) and cache the package for `input`, resolving when the cache is
+ * populated. Deduped at module scope by signature: React StrictMode's dev
+ * double-mount — and any concurrent caller — awaits the SAME generation rather
+ * than starting a second one or navigating before the first finishes. Resolves
+ * immediately if a matching package is already cached. Never rejects.
+ */
+export function ensureAiContent(
+  input: AiContentInput,
+  options: GenerateOptions = {},
+): Promise<void> {
+  const signature = aiContentSignature(input.summary)
+  if (readAiContent(signature)) return Promise.resolve()
+  if (inFlight && inFlight.signature === signature) return inFlight.promise
+
+  const promise = generateAiContent(input, options)
+    .then((pkg) => {
+      writeAiContent(pkg, signature)
+    })
+    .finally(() => {
+      if (inFlight && inFlight.signature === signature) inFlight = null
+    })
+
+  inFlight = { signature, promise }
+  return promise
+}

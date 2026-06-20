@@ -21,13 +21,13 @@
  * first so the cache/profile are populated.
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
 
 import { cn } from "../lib/cn";
 import { calculateCompleteness } from "../lib/completeness";
-import { computeAndCacheAnalysis } from "../lib/draft";
+import { computeAndCacheAnalysis, readAnalysis } from "../lib/draft";
 import { improvementPlan } from "../lib/calc/improvement";
 import {
   contributionsForArea,
@@ -36,13 +36,8 @@ import {
 } from "../lib/calc/riskContributions";
 import type { AreaId } from "../lib/calc/riskContributions";
 import { familyAreaScore } from "../lib/calc/riskContributions";
-import {
-  generateAiContent,
-  aiContentSignature,
-  writeAiContent,
-  type AiContentInput,
-} from "../lib/report/aiContent";
-import { remove, readInsurances, readProfile, STORAGE_KEYS } from "../lib/storage";
+import { ensureAiContent, type AiContentInput } from "../lib/report/aiContent";
+import { readInsurances, readProfile } from "../lib/storage";
 import { AREA_META } from "../components/result/areaMeta";
 import type {
   AnalysisCache,
@@ -214,13 +209,15 @@ export function Analyzing() {
 
   // How many checklist lines have flipped to ✓ (0..4).
   const [doneCount, setDoneCount] = useState(reduced ? STEPS.length : 0);
-  // Guard so the (idempotent) compute runs once even under StrictMode.
-  const computedRef = useRef(false);
-
-  /* Compute + cache the analysis once, kick off the single AI-content
-   * generation, then navigate once both the scripted dwell and generation (or
-   * its ~45s cap) are done. On failure/timeout we drop the AI cache and proceed;
-   * screens fall back to their own templates. */
+  // The last line ("맞춤 리포트를 준비하고 있어요") holds as a spinner until the AI
+  // bundle is ready, so the wait never reads as "all done but stuck".
+  const [contentReady, setContentReady] = useState(false);
+  /* Compute + cache the analysis, generate the single AI-content bundle, and
+   * navigate once BOTH the scripted dwell and the generation (or its ~45s cap)
+   * finish. Compute is idempotent (reuse the cache a prior mount wrote) and the
+   * generation is deduped at module scope, so StrictMode's dev double-mount
+   * awaits the same in-flight bundle instead of navigating before it's ready.
+   * On failure/timeout each screen falls back to its own template. */
   useEffect(() => {
     if (!profileReady) return;
 
@@ -230,54 +227,38 @@ export function Analyzing() {
     let navTimer = 0;
 
     const go = () => {
-      if (cancelled) return;
-      if (!dwellDone || !workDone) return;
+      if (cancelled || !dwellDone || !workDone) return;
       navigate(destination, { replace: true });
     };
 
-    if (!computedRef.current) {
-      computedRef.current = true;
-      const insurances = readInsurances<Insurance>();
-      // The only live call to the analysis pipeline. Errors are swallowed so a
-      // bad input can't strand the user on the spinner — /result handles a null
-      // cache with a re-diagnose message, and never re-seeds sample data.
-      let analysis: AnalysisCache | null;
+    const insurances = readInsurances<Insurance>();
+    // Errors are swallowed so a bad input can't strand the user on the spinner —
+    // /result handles a null cache with a re-diagnose message and never re-seeds.
+    let analysis = readAnalysis();
+    if (!analysis) {
       try {
         analysis = computeAndCacheAnalysis(profile, insurances);
       } catch {
-        analysis = null; // downstream guards a missing cache
+        analysis = null;
       }
+    }
 
-      if (analysis) {
-        // Generate all screen copy in one sidecar call, then cache it signed by
-        // the same summary the report screen looks it up with. Never throws.
-        const input = buildAiContentInput(analysis, profile, insurances);
-        const signature = aiContentSignature(input.summary);
-        generateAiContent(input, { timeoutMs: AI_CONTENT_TIMEOUT_MS })
-          .then((pkg) => {
-            // Write even if this effect closure was cancelled: the cache is
-            // module-level and the work is real, so StrictMode's dev double-mount
-            // must not drop a good bundle. Screens re-read it on mount.
-            writeAiContent(pkg, signature);
-          })
-          .catch(() => {
-            // generateAiContent never rejects, but be defensive and clear any
-            // stale bundle so screens fall back to their own templates.
-            remove(STORAGE_KEYS.aiContent);
-          })
-          .finally(() => {
-            workDone = true;
-            go();
-          });
-      } else {
+    if (analysis) {
+      // One sidecar call for all screen copy, cached under the report summary's
+      // signature. Deduped module-wide so both StrictMode mounts await it.
+      const input = buildAiContentInput(analysis, profile, insurances);
+      ensureAiContent(input, { timeoutMs: AI_CONTENT_TIMEOUT_MS }).finally(() => {
         workDone = true;
-      }
+        setContentReady(true);
+        go();
+      });
     } else {
-      // StrictMode re-run: compute already happened, don't block on AI again.
+      // No analysis → navigate at the dwell; the last step stays a spinner until
+      // then (no AI wait to hold for).
       workDone = true;
     }
 
-    // Scripted dwell (also the floor so the checklist never flashes past).
+    // Scripted dwell — the floor so the checklist never flashes past.
     navTimer = window.setTimeout(() => {
       dwellDone = true;
       go();
@@ -302,7 +283,11 @@ export function Analyzing() {
     return <Navigate to="/input/basic" replace />;
   }
 
-  const activeIndex = Math.min(doneCount, STEPS.length - 1);
+  // Hold the final step active (spinner) until the AI bundle resolves, unless
+  // reduced motion (then the checklist is static all-done from the start).
+  const effectiveDone =
+    reduced || contentReady ? doneCount : Math.min(doneCount, STEPS.length - 1);
+  const activeIndex = Math.min(effectiveDone, STEPS.length - 1);
   const heading = reduced ? "분석하고 있어요" : "잠시만요, 분석하고 있어요";
 
   return (
@@ -370,8 +355,8 @@ export function Analyzing() {
         {/* Scripted checklist */}
         <ul className="mt-8 flex w-full flex-col gap-3 rounded-3xl bg-white px-6 py-6 shadow-card">
           {STEPS.map((step, i) => {
-            const done = i < doneCount;
-            const active = !reduced && i === doneCount;
+            const done = i < effectiveDone;
+            const active = !reduced && i === effectiveDone;
             return (
               <li key={step} className="flex items-center gap-3">
                 <StepMark done={done} active={active} />
