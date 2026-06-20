@@ -16,6 +16,7 @@ dist-ssr
 
 # Documentation and local review notes
 *.md
+!README.md
 docs/
 tests/
 
