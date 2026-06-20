@@ -289,6 +289,9 @@ export function Analyzing() {
     reduced || contentReady ? doneCount : Math.min(doneCount, STEPS.length - 1);
   const activeIndex = Math.min(effectiveDone, STEPS.length - 1);
   const heading = reduced ? "분석하고 있어요" : "잠시만요, 분석하고 있어요";
+  // Once the scripted checklist is done but the AI bundle is still generating,
+  // show a friendlier "writing" state so the wait never reads as stuck.
+  const writing = !reduced && doneCount >= STEPS.length && !contentReady;
 
   return (
     <main
@@ -332,9 +335,23 @@ export function Analyzing() {
           {heading}
         </h1>
 
-        {/* Rotating active-line caption (skipped under reduced motion) */}
-        <div className="mt-2 h-5 text-center">
-          {reduced ? (
+        {/* Caption — the rotating step line, or the "AI is writing" state once
+            the scripted checklist is done but the bundle is still generating. */}
+        <div className="mt-2 flex min-h-[2.75rem] flex-col items-center justify-start text-center">
+          {writing ? (
+            <motion.div
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-col items-center gap-1"
+            >
+              <p className="flex items-center gap-1.5 text-[14px] font-semibold text-brand-500">
+                AI가 맞춤 리포트를 작성하고 있어요
+                <BouncingDots />
+              </p>
+              <p className="text-[12px] text-neutral-400">거의 다 됐어요 · 멈춘 게 아니에요</p>
+            </motion.div>
+          ) : reduced ? (
             <p className="text-[13px] font-medium text-neutral-500">분석이 거의 끝났어요</p>
           ) : (
             <AnimatePresence mode="wait" initial={false}>
@@ -380,6 +397,27 @@ export function Analyzing() {
         <p className="mt-5 text-[12px] text-neutral-400">입력하신 정보는 안전하게 보호돼요.</p>
       </section>
     </main>
+  );
+}
+
+/** Three dots bouncing in a wave — the "AI is writing" cue next to the caption. */
+function BouncingDots() {
+  return (
+    <span aria-hidden className="inline-flex items-end gap-[3px] pb-[3px]">
+      {[0, 1, 2].map((i) => (
+        <motion.span
+          key={i}
+          className="size-[5px] rounded-full bg-brand-500"
+          animate={{ y: [0, -4, 0], opacity: [0.35, 1, 0.35] }}
+          transition={{
+            duration: 0.9,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: i * 0.15,
+          }}
+        />
+      ))}
+    </span>
   );
 }
 
