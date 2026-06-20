@@ -29,17 +29,19 @@ const firebaseConfig = {
 } as const;
 
 /**
- * True when every Firebase web config value is a non-empty string. Partial
- * config can boot Auth but fail later in Firestore, so Firebase stays dormant
- * until Vercel / `.env.local` setup is complete.
+ * True when the Firebase web config values that Auth + Firestore actually need
+ * are present. `appId` is intentionally NOT required: it's only used by
+ * Analytics / Installations (which this app doesn't use), and gating on it would
+ * disable login whenever the build is missing that one var — exactly the trap we
+ * hit in production. The five values below are what `getAuth`/`getFirestore` and
+ * Google sign-in depend on.
  */
 export const isFirebaseConfigured: boolean = Boolean(
   firebaseConfig.apiKey &&
     firebaseConfig.authDomain &&
     firebaseConfig.projectId &&
     firebaseConfig.storageBucket &&
-    firebaseConfig.messagingSenderId &&
-    firebaseConfig.appId,
+    firebaseConfig.messagingSenderId,
 );
 
 interface FirebaseHandles {
