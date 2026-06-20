@@ -1,7 +1,7 @@
 import type { GeneratedReport, ReportSummary } from '../../types'
 import { codexReportResponseSchema } from './schema'
 import { isReportGrounded } from './grounding'
-import { resolveSidecarUrl } from './sidecar'
+import { resolveSidecarToken, resolveSidecarUrl } from './sidecar'
 import { REPORT_DISCLAIMER, buildTemplateReport } from './template'
 
 type GenerateReportOptions = {
@@ -18,7 +18,7 @@ export async function generateReport(
   options: GenerateReportOptions = {},
 ): Promise<GeneratedReport> {
   const sidecarUrl = resolveSidecarUrl(options.sidecarUrl)
-  const token = options.token ?? import.meta.env.VITE_LLM_SIDECAR_TOKEN
+  const token = resolveSidecarToken(options.token)
   const fetchImpl = options.fetchImpl ?? fetch
 
   // Empty string → use Vite proxy at /api/report (forwarded to sidecar).
